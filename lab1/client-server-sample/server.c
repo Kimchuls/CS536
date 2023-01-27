@@ -3,6 +3,7 @@
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
+// #include <arpa/inet.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -29,7 +30,7 @@ int main(int argc, char const* argv[])
 		exit(EXIT_FAILURE);
 	}
 	address.sin_family = AF_INET;
-	address.sin_addr.s_addr = INADDR_ANY;
+	// address.sin_addr.s_addr = htonl(INADDR_ANY);
 	address.sin_port = htons(PORT);
 
 	// Forcefully attaching socket to the port 12000
@@ -51,6 +52,7 @@ int main(int argc, char const* argv[])
 			perror("accept");
 			exit(EXIT_FAILURE);
 		}
+		printf("accpet ip:%s \n", inet_ntoa(address.sin_addr));
 		char sentence[1024] = { 0 };
 		valread = read(new_socket, sentence, 1024);
 		printf("Recevied sentence:\n");

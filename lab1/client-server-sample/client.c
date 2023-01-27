@@ -25,12 +25,13 @@ int main(int argc, char const* argv[])
 
 	// Convert IPv4 and IPv6 addresses from text to binary
 	// form
-	if (inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)
+	if (inet_pton(AF_INET, "10.145.21.35", &serv_addr.sin_addr)
 		<= 0) {
 		printf(
 			"\nInvalid address/ Address not supported \n");
 		return -1;
 	}
+	// serv_addr.sin_addr.s_addr = inet_addr("10.145.21.35");
 
 	if ((client_fd
 		= connect(sock, (struct sockaddr*)&serv_addr,
