@@ -1,0 +1,3 @@
+clear
+gcc serverMul.c -o serverMul
+./serverMul 12001
