@@ -162,6 +162,7 @@ void sendBigPicture(int sockfd, char *name)
     // 2647*3529
 
     send(sockfd, picBuff, sizeof(picBuff), 0);
+    close(sockfd);
     fclose(f);
 }
 void *thread_recv(void *arg)
@@ -306,7 +307,7 @@ void *thread_recv(void *arg)
         NotFound404(sockfd);
     }
 end:
-    close(sockfd);
+    // close(sockfd);
 }
 int main(int argc, char const *argv[])
 {
