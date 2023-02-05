@@ -1,5 +1,6 @@
 // Server side C/C++ program to demonstrate Socket
 // programming
+//reference: https://www.cnblogs.com/charliecza/p/16938789.html
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
