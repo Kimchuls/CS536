@@ -29,32 +29,32 @@ struct node
 void badRequest400(int sockfd)
 {
     char buff[] =
-        "HTTP/1.1 400 Bad Request\r\n"
+        "HTTP/2.0 400 Bad Request\r\n"
         "Content-Type: text/html\r\n"
         "\r\n"
         "400 Bad Request: URL String Syntax Error.\r\n";
     send(sockfd, buff, strlen(buff), 0);
-    printf("HTTP/1.1 400 Bad Request\n");
+    printf("HTTP/2.0 400 Bad Request\n");
 }
 void HTTPVersion505(int sockfd)
 {
     char buff[] =
-        "HTTP/1.1 505 HTTP Version Not Supported\r\n"
+        "HTTP/2.0 505 HTTP Version Not Supported\r\n"
         "Content-Type: text/html\r\n"
         "\r\n"
         "505 HTTP Version Not Supported: Client sends GET with a different HTTP version.\r\n";
     send(sockfd, buff, strlen(buff), 0);
-    printf("HTTP/1.1 505 HTTP Version Not Supported\n");
+    printf("HTTP/2.0 505 HTTP Version Not Supported\n");
 }
 void NotFound404(int sockfd)
 {
     char buff[] =
-        "HTTP/1.1 404 Not Found\r\n"
+        "HTTP/2.0 404 Not Found\r\n"
         "Content-Type: text/html\r\n"
         "\r\n"
         "404 Not Found: HTML file does not exist.\r\n";
     send(sockfd, buff, strlen(buff), 0);
-    printf("HTTP/1.1 404 Not Found\n");
+    printf("HTTP/2.0 404 Not Found\n");
 }
 // int compare(char *a, char *b)
 // {
@@ -82,11 +82,11 @@ void sendText(int sockfd, char *name)
     name = strcat(name, ".html");
     FILE *f = fopen(name, "r");
     char header[] =
-        "HTTP/1.1 200 OK\r\n"
+        "HTTP/2.0 200 OK\r\n"
         "Content-Type: text/html\r\n"
         "\r\n";
     send(sockfd, header, sizeof(header), 0);
-    printf("HTTP/1.1 200 OK\n");
+    printf("HTTP/2.0 200 OK\n");
     char line[LINE_LENGTH] = {0};
     while (fgets(line, sizeof(line), f) != NULL)
     {
@@ -114,7 +114,7 @@ void sendPicture(int sockfd, char *name)
     char picBuff[38 * 1024] = {0};
     length = fread(picBuff, 1, length, f);
     char *ret_buff = (char *)malloc(length + 1024);
-    int tlen = sprintf(ret_buff, "HTTP/1.1 200 OK\r\n"
+    int tlen = sprintf(ret_buff, "HTTP/2.0 200 OK\r\n"
                                  "Content-Type: image/jpeg\r\n"
                                  "Content-Length: %d\r\n"
                                  "Connection: close\r\n"
@@ -125,7 +125,7 @@ void sendPicture(int sockfd, char *name)
     memcpy(ret_buff + tlen, picBuff, length);
     tlen += length;
     send(sockfd, ret_buff, tlen, 0);
-    printf("HTTP/1.1 200 OK\n");
+    printf("HTTP/2.0 200 OK\n");
     // 2647*3529
 
     send(sockfd, picBuff, sizeof(picBuff), 0);
@@ -149,7 +149,7 @@ void sendBigPicture(int sockfd, char *name)
 
 
     char *ret_buff = (char *)malloc(length + 1024);
-    int tlen = sprintf(ret_buff, "HTTP/1.1 200 OK\r\n"
+    int tlen = sprintf(ret_buff, "HTTP/2.0 200 OK\r\n"
                                  "Content-Type: image/jpeg\r\n"
                                  //  "Content-Length: %d\r\n"
                                  // "Transfer-Encoding: Chunked"
@@ -190,7 +190,7 @@ void sendVideo(int sockfd, char *name)
     // char picBuff[5119 * 1024] = {0};
     // length = fread(picBuff, 1, length, f);
     char *ret_buff = (char *)malloc(length + 1024);
-    int tlen = sprintf(ret_buff, "HTTP/1.1 200 OK\r\n"
+    int tlen = sprintf(ret_buff, "HTTP/2.0 200 OK\r\n"
                                  "Content-Type: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8\r\n"
                                  //  "Content-Length: %d\r\n"
                                  // "Transfer-Encoding: Chunked"
@@ -203,7 +203,7 @@ void sendVideo(int sockfd, char *name)
     // memcpy(ret_buff + tlen, picBuff, length);
     // tlen += length;
     // send(sockfd, ret_buff, tlen, 0);
-    // printf("HTTP/1.1 200 OK\n");
+    // printf("HTTP/2.0 200 OK\n");
     // send(sockfd, picBuff, 10240, 0);
     // send(sockfd, picBuff+10240, sizeof(picBuff)-10240, 0);
     int i = 0;
@@ -263,15 +263,15 @@ void *thread_recv(void *arg)
         // http_version[http_front++] = request[request_front++];
         memcpy(&http_version[++http_front], &request[request_front++], 1);
     http_version[++http_front] = '\0';
-    // char ver[9] = "HTTP/1.1";
+    // char ver[9] = "HTTP/2.0";
     // printf("%ld, %ld, %d, '%s'\n",strlen(ver), strlen(http_version),http_front, http_version);
     // for (int x = 0; x <= strlen(http_version); x++)
     //     printf("%d ", http_version[x]);
 
     // printf(".\n");
     /*check GET request HTTP 505 HTTP Version Not Supported*/
-    // printf("%d\n", strcmp(http_version, "HTTP/1.1"));
-    if (strcmp(http_version, "HTTP/1.1") != 0)
+    // printf("%d\n", strcmp(http_version, "HTTP/2.0"));
+    if (strcmp(http_version, "HTTP/2.0") != 0)
     {
         printf("0-message-to-client: %s, %d \n", ip, port);
         HTTPVersion505(sockfd);
