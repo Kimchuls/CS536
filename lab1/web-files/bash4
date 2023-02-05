@@ -1,0 +1,3 @@
+clear
+gcc server2.c -o server2
+./server2 12000
