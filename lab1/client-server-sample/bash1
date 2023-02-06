@@ -1,3 +1,3 @@
 clear
 gcc client.c -o client
-./client 10.145.21.35 12001 messageisonlything
+./client 10.145.21.36 12001 messageisonlything

@@ -17,6 +17,22 @@ void *send_pthread(void *arg)
 	{
 		printf("send error\n");
 	}
+	// printf("Modified sentence received from server:\n");
+	// char modifiedSentence[1024] = {0};
+	// if (recv(sock, modifiedSentence, sizeof(modifiedSentence), 0) < 0)
+	// {
+	// 	printf("recv error\n");
+	// 	return NULL;
+	// }
+	// printf("%s\n", modifiedSentence);
+}
+void *recv_pthread(void *arg)
+{
+	int sock = *(int *)arg;
+	// if (send(sock, message, strlen(message), 0) < 0)
+	// {
+	// 	printf("send error\n");
+	// }
 	printf("Modified sentence received from server:\n");
 	char modifiedSentence[1024] = {0};
 	if (recv(sock, modifiedSentence, sizeof(modifiedSentence), 0) < 0)
@@ -25,10 +41,6 @@ void *send_pthread(void *arg)
 		return NULL;
 	}
 	printf("%s\n", modifiedSentence);
-}
-void *recv_pthread(void *arg)
-{
-	int sock = *(int *)arg;
 }
 
 int main(int argc, char *argv[])
@@ -62,29 +74,36 @@ int main(int argc, char *argv[])
 		printf("\nConnection Failed \n");
 		return -1;
 	}
-	pthread_t thed;
-	if (pthread_create(&thed, NULL, send_pthread, &sock) != 0)
+	pthread_t thed1;
+	if (pthread_create(&thed1, NULL, send_pthread, &sock) != 0)
 	{
 		printf("thread error:%s \n", strerror(errno));
 		return -1;
 	}
-	pthread_join(thed, NULL);
+	pthread_join(thed1, NULL);
 	pthread_t thed2;
-	if (pthread_create(&thed2, NULL, send_pthread, &sock) != 0)
+	if (pthread_create(&thed2, NULL, recv_pthread, &sock) != 0)
 	{
 		printf("thread error:%s \n", strerror(errno));
 		return -1;
 	}
 	pthread_join(thed2, NULL);
-	sleep(3);
-	message[0]='*';
-	pthread_t thed3;
-	if (pthread_create(&thed3, NULL, send_pthread, &sock) != 0)
-	{
-		printf("thread error:%s \n", strerror(errno));
-		return -1;
-	}
-	pthread_join(thed2, NULL);
+	// pthread_t thed2;
+	// if (pthread_create(&thed2, NULL, send_pthread, &sock) != 0)
+	// {
+	// 	printf("thread error:%s \n", strerror(errno));
+	// 	return -1;
+	// }
+	// pthread_join(thed2, NULL);
+	// sleep(3);
+	// message[0]='*';
+	// pthread_t thed3;
+	// if (pthread_create(&thed3, NULL, send_pthread, &sock) != 0)
+	// {
+	// 	printf("thread error:%s \n", strerror(errno));
+	// 	return -1;
+	// }
+	// pthread_join(thed2, NULL);
 	// closing the connected socket
 	sleep(5);
 	// close(client_fd);
