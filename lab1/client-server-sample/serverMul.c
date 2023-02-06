@@ -1,6 +1,6 @@
 // Server side C/C++ program to demonstrate Socket
 // programming
-//reference: https://www.cnblogs.com/charliecza/p/16938789.html
+// reference: https://www.cnblogs.com/charliecza/p/16938789.html
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,7 +13,8 @@
 #include <errno.h>
 // #define PORT 12000
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-struct node{
+struct node
+{
 	int new_socket;
 	char *ip;
 	int port;
@@ -21,17 +22,29 @@ struct node{
 void *thread_recv(void *arg)
 {
 	char sentence[1024] = {0};
-	struct node *n=(struct node *)arg;
+	struct node *n = (struct node *)arg;
 
 	int new_socket = n->new_socket;
-	char *ip=n->ip;
-	int port=n->port;
-	int valread = recv(new_socket, sentence, sizeof(sentence), 0);
-	printf("%s\n", sentence);
-	send(new_socket, sentence, strlen(sentence), 0);
-	while(1){
-		if(send(new_socket, sentence, strlen(sentence), 0)<0){
-			printf("close-client: %s, %d\n",ip,port);
+	char *ip = n->ip;
+	int port = n->port;
+	// int valread = recv(new_socket, sentence, sizeof(sentence), 0);
+	// printf("%s\n", sentence);
+	// send(new_socket, sentence, strlen(sentence), 0);
+	while (1)
+	{
+		int valread = recv(new_socket, sentence, sizeof(sentence), 0);
+		if (valread < 0)
+		{
+			printf("close-client: %s, %d\n", ip, port);
+			return NULL;
+		}
+		else if (valread > 0)
+		{
+			printf("%s\n", sentence);
+		}
+		if (send(new_socket, sentence, strlen(sentence), 0) < 0)
+		{
+			printf("close-client: %s, %d\n", ip, port);
 			return NULL;
 		}
 	}
@@ -86,19 +99,19 @@ int main(int argc, char const *argv[])
 			exit(EXIT_FAILURE);
 		}
 		struct node n;
-		n.new_socket=new_socket;
-		n.ip=inet_ntoa(skaddr.sin_addr);
-		n.port=port;
-		printf("message-from-client: %s, %d \n", inet_ntoa(skaddr.sin_addr),port);
-		if (pthread_create(&recv_thread, NULL, thread_recv, &n) <0)
+		n.new_socket = new_socket;
+		n.ip = inet_ntoa(skaddr.sin_addr);
+		n.port = port;
+		printf("message-from-client: %s, %d \n", inet_ntoa(skaddr.sin_addr), port);
+		if (pthread_create(&recv_thread, NULL, thread_recv, &n) < 0)
 		{
 			printf("create thread error:%s \n", strerror(errno));
 			break;
 		}
 		pthread_detach(recv_thread);
 	}
-	close(new_socket);
-	shutdown(server_fd, SHUT_RDWR);
+	// close(new_socket);
+	// shutdown(server_fd, SHUT_RDWR);
 	// close(server_fd);
 	return 0;
 }

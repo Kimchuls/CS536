@@ -9,7 +9,7 @@
 #include <errno.h>
 #include <stdlib.h>
 char *message;
-char modifiedSentence[1024] = {0};
+
 void *send_pthread(void *arg)
 {
 	int sock = *(int *)arg;
@@ -18,6 +18,7 @@ void *send_pthread(void *arg)
 		printf("send error\n");
 	}
 	printf("Modified sentence received from server:\n");
+	char modifiedSentence[1024] = {0};
 	if (recv(sock, modifiedSentence, sizeof(modifiedSentence), 0) < 0)
 	{
 		printf("recv error\n");
@@ -68,8 +69,24 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 	pthread_join(thed, NULL);
+	pthread_t thed2;
+	if (pthread_create(&thed2, NULL, send_pthread, &sock) != 0)
+	{
+		printf("thread error:%s \n", strerror(errno));
+		return -1;
+	}
+	pthread_join(thed2, NULL);
+	sleep(3);
+	message[0]='*';
+	pthread_t thed3;
+	if (pthread_create(&thed3, NULL, send_pthread, &sock) != 0)
+	{
+		printf("thread error:%s \n", strerror(errno));
+		return -1;
+	}
+	pthread_join(thed2, NULL);
 	// closing the connected socket
 	sleep(5);
-	close(client_fd);
+	// close(client_fd);
 	return 0;
 }
