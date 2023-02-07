@@ -35,7 +35,7 @@ void *thread_recv(void *arg)
 		int valread = recv(new_socket, sentence, sizeof(sentence), 0);
 		if (valread < 0)
 		{
-			printf("close-client: %s, %d\n", ip, port);
+			printf("1-close-client: %s, %d\n", ip, port);
 			return NULL;
 		}
 		else if (valread > 0)
@@ -44,7 +44,7 @@ void *thread_recv(void *arg)
 		}
 		if (send(new_socket, sentence, strlen(sentence), 0) < 0)
 		{
-			printf("close-client: %s, %d\n", ip, port);
+			printf("2-close-client: %s, %d\n", ip, port);
 			return NULL;
 		}
 	}

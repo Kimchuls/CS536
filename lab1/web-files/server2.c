@@ -193,7 +193,8 @@ void *thread_recv(void *arg)
                     // send(sockfd, "\n", strlen("\n"), 0);
                     flag = 1;
                     indexes[xx] += size;
-                    if(ii%100==1)printf("%s %d\n",loadfile[xx],ii);
+                    if (ii % 100 == 1)
+                        printf("%s %d\n", loadfile[xx], ii);
                 }
                 ii++;
                 if (flag == 0)
@@ -385,10 +386,7 @@ int main(int argc, char const *argv[])
         n.new_socket = new_socket;
         n.ip = inet_ntoa(skaddr.sin_addr);
         n.port = port;
-        if (pthread_create(&recv_thread, NULL, thread_recv, &n) == 0)
-        {
-        }
-        else
+        if (pthread_create(&recv_thread, NULL, thread_recv, &n) != 0)
         {
             perror("thread fail");
             exit(EXIT_FAILURE);
