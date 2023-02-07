@@ -112,6 +112,9 @@ void *thread_recv(void *arg)
     char uri[URI_LENGTH] = {0};
     char http_version[URI_LENGTH] = {0};
     char request[REQUEST_LENGTH] = {0};
+    memset(loadfile,0,sizeof(loadfile));
+    loadfile_length=0;
+    memset(loadfile_flag,0,sizeof(loadfile_flag));
 
     while (1)
     {
@@ -156,10 +159,10 @@ void *thread_recv(void *arg)
         printf("URI: %s\n", uri);
         if (0 == strcmp("/end", uri))
         {
-            for (int i = 0; i < loadfile_length; i++)
-            {
-                printf("%s\n", loadfile[i]);
-            }
+            // for (int i = 0; i < loadfile_length; i++)
+            // {
+            //     printf("%s\n", loadfile[i]);
+            // }
             FILE *fs[100];
             ll lengths[100];
             for (int xx = 0; xx < loadfile_length; xx++)

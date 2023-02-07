@@ -203,9 +203,9 @@ void *recv_pthread(void *arg)
 	long total_length = 0;
 	while (1)
 	{
-
+		memset(modifiedSentence,0,sizeof(modifiedSentence));
 		ssize_t result = recv(sock, modifiedSentence, sizeof(modifiedSentence), 0);
-		printf("'%s,\n", modifiedSentence);
+		// printf("'%s,\n", modifiedSentence);
 		if (result < -1)
 		{
 			printf("0-recv error\n");
@@ -215,7 +215,7 @@ void *recv_pthread(void *arg)
 		{
 			break;
 		}
-		// output_func(modifiedSentence);
+		output_func(modifiedSentence);
 		// total_length += result;
 		// if (number % 100 == 1)
 		// {
