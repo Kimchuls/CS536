@@ -15,18 +15,23 @@
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 struct node
 {
+	int id;
 	int new_socket;
-	char *ip;
+	char ip[100];
 	int port;
 };
+struct node n[100];
+int flag[100] = {0};
+int num = 0;
 void *thread_recv(void *arg)
 {
 	char sentence[1024] = {0};
-	struct node *n = (struct node *)arg;
+	struct node n = *(struct node *)arg;
+	// int id = *(int *)arg;
 
-	int new_socket = n->new_socket;
-	char *ip = n->ip;
-	int port = n->port;
+	int new_socket = n.new_socket;
+	// char *ip = n.ip;
+	int port = n.port;
 	// int valread = recv(new_socket, sentence, sizeof(sentence), 0);
 	// printf("%s\n", sentence);
 	// send(new_socket, sentence, strlen(sentence), 0);
@@ -35,7 +40,7 @@ void *thread_recv(void *arg)
 		int valread = recv(new_socket, sentence, sizeof(sentence), 0);
 		if (valread < 0)
 		{
-			printf("1-close-client: %s, %d\n", ip, port);
+			printf("1-close-client: %s, %d\n", n.ip, port);
 			return NULL;
 		}
 		else if (valread > 0)
@@ -44,7 +49,8 @@ void *thread_recv(void *arg)
 		}
 		if (send(new_socket, sentence, strlen(sentence), 0) < 0)
 		{
-			printf("2-close-client: %s, %d\n", ip, port);
+			printf("2-close-client: %s, %d\n", n.ip, port);
+			// printf("%d\n", new_socket);
 			return NULL;
 		}
 	}
@@ -88,6 +94,7 @@ int main(int argc, char const *argv[])
 		exit(EXIT_FAILURE);
 	}
 	printf("The server is ready to receive\n");
+
 	while (1)
 	{
 		struct sockaddr_in skaddr;
@@ -98,17 +105,36 @@ int main(int argc, char const *argv[])
 			perror("accept");
 			exit(EXIT_FAILURE);
 		}
-		struct node n;
-		n.new_socket = new_socket;
-		n.ip = inet_ntoa(skaddr.sin_addr);
-		n.port = port;
-		printf("message-from-client: %s, %d \n", inet_ntoa(skaddr.sin_addr), port);
-		if (pthread_create(&recv_thread, NULL, thread_recv, &n) < 0)
+		pthread_mutex_lock(&mutex);
+		num++;
 		{
-			printf("create thread error:%s \n", strerror(errno));
-			break;
+			// int i;
+			// for (i = 0; i < 100; i++)
+			// {
+			// 	if (flag[i] == 0)
+			// 	{
+			// 		flag[i] = 1;
+			// 		break;
+			// 	}
+			// }
+			// n[i].id = i;
+			// n[i].new_socket = new_socket;
+			// // n[i].ip = inet_ntoa(skaddr.sin_addr);
+			// strcpy(n[i].ip, inet_ntoa(skaddr.sin_addr));
+			// n[i].port = port;
+			struct node n;
+			n.new_socket = new_socket;
+			strcpy(n.ip, inet_ntoa(skaddr.sin_addr));
+			n.port = port;
+			pthread_mutex_unlock(&mutex);
+			printf("message-from-client: %s, %d \n", inet_ntoa(skaddr.sin_addr), port);
+			if (pthread_create(&recv_thread, NULL, thread_recv, &n) < 0)
+			{
+				printf("create thread error:%s \n", strerror(errno));
+				break;
+			}
+			pthread_detach(recv_thread);
 		}
-		pthread_detach(recv_thread);
 	}
 	// close(new_socket);
 	// shutdown(server_fd, SHUT_RDWR);
