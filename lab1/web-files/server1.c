@@ -56,21 +56,7 @@ void NotFound404(int sockfd)
     send(sockfd, buff, strlen(buff), 0);
     printf("HTTP/1.1 404 Not Found\n");
 }
-// int compare(char *a, char *b)
-// {
-//     // int length = MAX(strlen(a), strlen(b));
-//     printf("length: %ld %ld\n", strlen(a), strlen(b));
-//     if (strlen(a) != strlen(b))
-//         return -1;
-//     int length = strlen(a);
-//     int i;
-//     for (i = 0; i < length; i++)
-//     {
-//         if (a[i] != b[i])
-//             return -1;
-//     }
-//     return 0;
-// }
+
 void sendText(int sockfd, char *name)
 {
     // printf("%s,%d,%d,%d\n", name, 0 == strcmp(name, "text"), 0 == strcmp(name, "picture"), 0 == strcmp(name, "bigpicture"));
@@ -96,11 +82,10 @@ void sendText(int sockfd, char *name)
         // printf("%s\n",line);
         memset(line, 0, sizeof(line));
     }
-    char end[] = "\r\n";
-    send(sockfd, end, sizeof(end), 0);
+    // char end[] = "\r\n";
+    // send(sockfd, end, sizeof(end), 0);
     printf("HTTP/1.1 200 OK\n");
     // sleep(5);
-    send(sockfd,"",sizeof(0),0);
     // fclose(f);
 }
 void sendPicture(int sockfd, char *name)
@@ -133,7 +118,7 @@ void sendPicture(int sockfd, char *name)
     send(sockfd, ret_buff, tlen, 0);
     printf("HTTP/1.1 200 OK\n");
 
-    send(sockfd, picBuff, sizeof(picBuff), 0);
+    // send(sockfd, picBuff, sizeof(picBuff), 0);
     fclose(f);
 }
 void sendBigPicture(int sockfd, char *name)

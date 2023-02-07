@@ -20,6 +20,9 @@
 #define ll long long
 #define MIN(a, b) (a) <= (b) ? (a) : (b)
 #define MAX(a, b) (a) >= (b) ? (a) : (b)
+char loadfile[100][1024] = {0};
+int loadfile_length = 0;
+int loadfile_flag[100] = {0};
 struct node
 {
     int new_socket;
@@ -56,21 +59,7 @@ void NotFound404(int sockfd)
     send(sockfd, buff, strlen(buff), 0);
     printf("HTTP/2.0 404 Not Found\n");
 }
-// int compare(char *a, char *b)
-// {
-//     // int length = MAX(strlen(a), strlen(b));
-//     printf("length: %ld %ld\n", strlen(a), strlen(b));
-//     if (strlen(a) != strlen(b))
-//         return -1;
-//     int length = strlen(a);
-//     int i;
-//     for (i = 0; i < length; i++)
-//     {
-//         if (a[i] != b[i])
-//             return -1;
-//     }
-//     return 0;
-// }
+
 void sendText(int sockfd, char *name)
 {
     // printf("%s,%d,%d,%d\n", name, 0 == strcmp(name, "text"), 0 == strcmp(name, "picture"), 0 == strcmp(name, "bigpicture"));
@@ -83,11 +72,11 @@ void sendText(int sockfd, char *name)
     name = strcat(name, ".html");
     FILE *f = fopen(name, "r");
     char header[] =
-        "HTTP/2.0 200 OK\r\n"
+        "HTTP/1.1 200 OK\r\n"
         "Content-Type: text/html\r\n"
         "\r\n";
     send(sockfd, header, sizeof(header), 0);
-    // printf("HTTP/2.0 200 OK\n");
+    // printf("HTTP/1.1 200 OK\n");
     sleep(0.005);
     char line[LINE_LENGTH] = {0};
     while (fgets(line, sizeof(line), f) != NULL)
@@ -96,133 +85,19 @@ void sendText(int sockfd, char *name)
         // printf("%s\n",line);
         memset(line, 0, sizeof(line));
     }
-    char end[] = "\r\n";
-    send(sockfd, end, sizeof(end), 0);
-    printf("HTTP/2.0 200 OK\n");
+    // char end[] = "\r\n";
+    // send(sockfd, end, sizeof(end), 0);
+    printf("HTTP/1.1 200 OK\n");
     // sleep(5);
-    send(sockfd,"",sizeof(0),0);
     // fclose(f);
 }
-void sendPicture(int sockfd, char *name)
+void substring(int left, int right, char *string_o, char *output) // get substring [left, right)
 {
-    // name = sprintf("./",name,".jpeg");
-    FILE *f = fopen("./purdue.jpeg", "rb");
-    if (f == NULL)
-        return;
-    fseek(f, 0, SEEK_END);
-    int length = ftell(f);
-    if (length <= 0)
+    // char substr[1024] = {0};
+    for (int i = 0; left + i < right; i++)
     {
-        fclose(f);
-        return;
+        memcpy(output + i, string_o + left + i, 1);
     }
-    fseek(f, 0, SEEK_SET);
-    char picBuff[38 * 1024] = {0};
-    length = fread(picBuff, 1, length, f);
-    char *ret_buff = (char *)malloc(length + 1024);
-    int tlen = sprintf(ret_buff, "HTTP/2.0 200 OK\r\n"
-                                 "Content-Type: image/jpeg\r\n"
-                                 "Content-Length: %d\r\n"
-                                 "Connection: close\r\n"
-                                 "Accept-Ranges:bytes\r\n"
-                                 "\r\n",
-                       length);
-
-    memcpy(ret_buff + tlen, picBuff, length);
-    tlen += length;
-    send(sockfd, ret_buff, tlen, 0);
-    printf("HTTP/2.0 200 OK\n");
-
-    send(sockfd, picBuff, sizeof(picBuff), 0);
-    fclose(f);
-}
-void sendBigPicture(int sockfd, char *name)
-{
-    FILE *f = fopen("./bigpicture.jpeg", "rb");
-    if (f == NULL)
-        return;
-    fseek(f, 0, SEEK_END);
-    int length = ftell(f);
-    if (length <= 0)
-    {
-        fclose(f);
-        return;
-    }
-    fseek(f, 0, SEEK_SET);
-    // char picBuff[5119 * 1024] = {0};
-    // length = fread(picBuff, 1, length, f);
-
-    char *ret_buff = (char *)malloc(length + 1024);
-    int tlen = sprintf(ret_buff, "HTTP/2.0 200 OK\r\n"
-                                 "Content-Type: image/jpeg\r\n"
-                                 //  "Content-Length: %d\r\n"
-                                 // "Transfer-Encoding: Chunked"
-                                 //  "Connection: keep-alive\r\n"
-                                 //  "Keep-Alive: timeout=10\r\n"
-                                 "Accept-Ranges:bytes\r\n"
-                                 "\r\n");
-    send(sockfd, ret_buff, tlen, 0);
-
-    int i = 0;
-    int X = 40 * 1024;
-    char picBuff[40 * 1024] = {0};
-    
-    printf("frame count:%d",(int)length/X);
-    for (i = 0; i < length; i += X)
-    {
-        int size = MIN(X, length - i);
-        size = fread(picBuff, 1, size, f);
-        send(sockfd, picBuff, size, 0);
-    }
-    fclose(f);
-}
-
-void sendVideo(int sockfd, char *name)
-{
-    FILE *f = fopen("./video.mp4", "rb");
-    if (f == NULL)
-        return;
-    fseek(f, 0, SEEK_END);
-    ll length = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    // printf("%lld\n", length);
-    // return;
-
-    if (length <= 0)
-    {
-        fclose(f);
-        return;
-    }
-    // char picBuff[5119 * 1024] = {0};
-    // length = fread(picBuff, 1, length, f);
-    char *ret_buff = (char *)malloc(length + 1024);
-    int tlen = sprintf(ret_buff, "HTTP/2.0 200 OK\r\n"
-                                 "Content-Type: image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8\r\n"
-                                 //  "Content-Length: %d\r\n"
-                                 // "Transfer-Encoding: Chunked"
-                                 //  "Connection: keep-alive\r\n"
-                                 //  "Keep-Alive: timeout=10\r\n"
-                                 "Accept-Ranges:bytes\r\n"
-                                 "\r\n");
-    send(sockfd, ret_buff, tlen, 0);
-
-    // memcpy(ret_buff + tlen, picBuff, length);
-    // tlen += length;
-    // send(sockfd, ret_buff, tlen, 0);
-    // printf("HTTP/2.0 200 OK\n");
-    // send(sockfd, picBuff, 10240, 0);
-    // send(sockfd, picBuff+10240, sizeof(picBuff)-10240, 0);
-    int i = 0;
-    int X = 40 * 1024;
-    char picBuff[40 * 1024] = {0};
-    printf("frame count:%d",(int)(length/X));
-    for (i = 0; i < length; i += X)
-    {
-        int size = MIN(X, length - i);
-        size = fread(picBuff, 1, size, f);
-        send(sockfd, picBuff, size, 0);
-    }
-    fclose(f);
 }
 void *thread_recv(void *arg)
 {
@@ -248,15 +123,21 @@ void *thread_recv(void *arg)
         }
         else if (length == 0)
         {
-            continue;
+
+            printf("1-close-client: %s, %d\n", ip, port);
+            break;
         }
-        printf("REQUEST\n%s\n", request);
+        if (send(sockfd, "a", 1, 0) < 0)
+        {
+            printf("2-close-client: %s, %d\n", ip, port);
+            return NULL;
+        }
+
         int request_front = 0;
         int method_front = 0;
         while (request_front < length && !isspace(request[request_front]))
             method[method_front++] = request[request_front++];
         method[method_front] = '\0';
-        // printf("method %s\n", method);
         while (request_front < length && isspace(request[request_front]))
             request_front++;
 
@@ -264,7 +145,6 @@ void *thread_recv(void *arg)
         while (request_front < length && !isspace(request[request_front]))
             uri[uri_front++] = request[request_front++];
         uri[uri_front] = '\0';
-        // printf("uri %s\n", uri);
         while (request_front < length && isspace(request[request_front]))
             request_front++;
 
@@ -272,6 +152,55 @@ void *thread_recv(void *arg)
         while (request_front < length && !(request[request_front] == '\n' || request[request_front] == 0x0d))
             memcpy(&http_version[++http_front], &request[request_front++], 1);
         http_version[++http_front] = '\0';
+
+        printf("URI: %s\n", uri);
+        if (0 == strcmp("/end", uri))
+        {
+            for (int i = 0; i < loadfile_length; i++)
+            {
+                printf("%s\n", loadfile[i]);
+            }
+            FILE *fs[100];
+            ll lengths[100];
+            for (int xx = 0; xx < loadfile_length; xx++)
+            {
+                fs[xx] = fopen(loadfile[xx], "rb");
+                if (fs[xx] == NULL)
+                    return NULL;
+                fseek(fs[xx], 0, SEEK_END);
+                lengths[xx] = ftell(fs[xx]);
+                fseek(fs[xx], 0, SEEK_SET);
+                if (lengths[xx] <= 0)
+                {
+                    fclose(fs[xx]);
+                    return NULL;
+                }
+            }
+            int X = 40 * 1024;
+            int indexes[100] = {0};
+            int ii = 1;
+            while (1)
+            {
+                int flag = 0;
+                for (int xx = 0; xx < loadfile_length; xx++)
+                {
+                    char picBuff[40 * 1024] = {0};
+                    int size = MIN(X, lengths[xx] - indexes[xx]);
+                    if (size == 0)
+                        continue;
+                    fread(picBuff, 1, size, fs[xx]);
+                    send(sockfd, loadfile[xx], strlen(loadfile[xx]), 0);
+                    // send(sockfd, "\n", strlen("\n"), 0);
+                    flag = 1;
+                    indexes[xx] += size;
+                    if(ii%100==1)printf("%s %d\n",loadfile[xx],ii);
+                }
+                ii++;
+                if (flag == 0)
+                    break;
+            }
+            break;
+        }
 
         /*check GET request HTTP 505 HTTP Version Not Supported*/
         if (strcmp(http_version, "HTTP/2.0") != 0)
@@ -287,7 +216,6 @@ void *thread_recv(void *arg)
         while (request[request_front] != '\n')
             firstline[firstline_front++] = request[request_front++];
         firstline[firstline_front] = '\0';
-        // printf("%s\n", firstline);
 
         /*check GET request URI 400 Bad Request*/
         char name[REQUEST_LENGTH] = {0};
@@ -346,7 +274,7 @@ void *thread_recv(void *arg)
             }
         }
         /*check GET request HTML file 200 OK/ 404 Not Found*/
-        // printf("name=%s, file_type=%d\n", name, (file_type == 0));
+        // printf("name=%s, file_type=%d\n", name, file_type);
         printf("4-message-to-client: %s, %d \n", ip, port);
         if (file_type == 0)
         {
@@ -354,27 +282,56 @@ void *thread_recv(void *arg)
         }
         else if (file_type == 1 && 0 == strcmp("purdue", name))
         {
-            sendPicture(sockfd, name);
+            printf("SEND PURDUE\n");
+            // sendPicture(sockfd, name);
+            for (int xx = 0; xx < 100; xx++)
+            {
+                if (loadfile_flag[xx] == 0)
+                {
+                    strcpy((loadfile[xx]), "purdue.jpeg");
+                    loadfile_length++;
+                    loadfile_flag[xx] = 1;
+                    break;
+                }
+            }
         }
         else if (file_type == 1 && 0 == strcmp(name, "bigpicture"))
         {
-            sendBigPicture(sockfd, name);
+            printf("SEND BIGPICTURE\n");
+            // sendBigPicture(sockfd, name);
+            for (int xx = 0; xx < 100; xx++)
+            {
+                if (loadfile_flag[xx] == 0)
+                {
+                    strcpy((loadfile[xx]), "bigpicture.jpeg");
+                    loadfile_length++;
+                    loadfile_flag[xx] = 1;
+                    break;
+                }
+            }
         }
         else if (file_type == 2 && 0 == strcmp(name, "video"))
         {
-            // printf("SEND VIDEO\n");
-            sendVideo(sockfd, name);
+            printf("SEND VIDEO\n");
+            // sendVideo(sockfd, name);
+            for (int xx = 0; xx < 100; xx++)
+            {
+                if (loadfile_flag[xx] == 0)
+                {
+                    strcpy(loadfile[xx], "video.mp4");
+                    loadfile_length++;
+                    loadfile_flag[xx] = 1;
+                    break;
+                }
+            }
         }
         else
         {
             NotFound404(sockfd);
         }
-        // printf("END ONE PART\n");
-        printf("\n\n");
     }
 
 end:
-    //     close(sockfd);
 }
 int main(int argc, char const *argv[])
 {
@@ -428,13 +385,6 @@ int main(int argc, char const *argv[])
         n.new_socket = new_socket;
         n.ip = inet_ntoa(skaddr.sin_addr);
         n.port = port;
-        // printf("message-from-client: %s, %d \n", inet_ntoa(skaddr.sin_addr), port);
-        // if (pthread_create(&recv_thread, NULL, thread_recv, &n) < 0)
-        // {
-        //     printf("create thread error:%s \n", strerror(errno));
-        //     break;
-        // }
-        // pthread_detach(recv_thread);
         if (pthread_create(&recv_thread, NULL, thread_recv, &n) == 0)
         {
         }
@@ -446,6 +396,5 @@ int main(int argc, char const *argv[])
     }
     close(new_socket);
     shutdown(server_fd, SHUT_RDWR);
-    // close(server_fd);
     return 0;
 }

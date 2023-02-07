@@ -1,3 +1,3 @@
 clear
 gcc client1.c -o client1
-./client1 10.145.21.36 12000 video.html
+./client1 10.145.21.36 12005 video.html
