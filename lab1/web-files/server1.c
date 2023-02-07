@@ -23,7 +23,7 @@
 struct node
 {
     int new_socket;
-    char *ip;
+    char ip[100];
     int port;
 };
 void badRequest400(int sockfd)
@@ -151,8 +151,8 @@ void sendBigPicture(int sockfd, char *name)
     int i = 0;
     int X = 40 * 1024;
     char picBuff[40 * 1024] = {0};
-    
-    printf("frame count:%d",(int)length/X);
+
+    printf("frame count:%d", (int)length / X);
     for (i = 0; i < length; i += X)
     {
         int size = MIN(X, length - i);
@@ -200,7 +200,7 @@ void sendVideo(int sockfd, char *name)
     int i = 0;
     int X = 40 * 1024;
     char picBuff[40 * 1024] = {0};
-    printf("frame count:%d",(int)(length/X));
+    printf("frame count:%d", (int)(length / X));
     for (i = 0; i < length; i += X)
     {
         int size = MIN(X, length - i);
@@ -213,9 +213,9 @@ void *thread_recv(void *arg)
 {
     struct node n = *(struct node *)arg;
     int sockfd = n.new_socket;
-    char *ip = n.ip;
+    // char *ip = n.ip;
     int port = n.port;
-    printf("message-from-client: %s, %d \n", ip, port);
+    printf("message-from-client: %s, %d \n", n.ip, port);
 
     /* parse the request information*/
     char method[METHOD_LENGTH] = {0};
@@ -228,7 +228,7 @@ void *thread_recv(void *arg)
         ssize_t length = recv(sockfd, request, sizeof(request), 0);
         if (length < 0)
         {
-            printf("close-client: %s, %d\n", ip, port);
+            printf("close-client: %s, %d\n", n.ip, port);
             return NULL;
         }
         else if (length == 0)
@@ -261,7 +261,7 @@ void *thread_recv(void *arg)
         /*check GET request HTTP 505 HTTP Version Not Supported*/
         if (strcmp(http_version, "HTTP/1.1") != 0)
         {
-            printf("0-message-to-client: %s, %d \n", ip, port);
+            printf("0-message-to-client: %s, %d \n", n.ip, port);
             HTTPVersion505(sockfd);
             goto end;
         }
@@ -281,7 +281,7 @@ void *thread_recv(void *arg)
         int file_type;
         if (strlen(uri) == 0 || uri[uri_pt] != '/')
         {
-            printf("1-message-to-client: %s, %d \n", ip, port);
+            printf("1-message-to-client: %s, %d \n", n.ip, port);
             badRequest400(sockfd);
             // return NULL;
             goto end;
@@ -301,7 +301,7 @@ void *thread_recv(void *arg)
             *name_front = '\0';
             if (uri_pt == strlen(uri))
             {
-                printf("2-message-to-client: %s, %d \n", ip, port);
+                printf("2-message-to-client: %s, %d \n", n.ip, port);
                 badRequest400(sockfd);
                 // return NULL;
                 goto end;
@@ -324,7 +324,7 @@ void *thread_recv(void *arg)
             }
             else
             {
-                printf("3-message-to-client: %s, %d \n", ip, port);
+                printf("3-message-to-client: %s, %d \n", n.ip, port);
                 badRequest400(sockfd);
                 // return NULL;
                 goto end;
@@ -332,7 +332,7 @@ void *thread_recv(void *arg)
         }
         /*check GET request HTML file 200 OK/ 404 Not Found*/
         // printf("name=%s, file_type=%d\n", name, (file_type == 0));
-        printf("4-message-to-client: %s, %d \n", ip, port);
+        printf("4-message-to-client: %s, %d \n", n.ip, port);
         if (file_type == 0)
         {
             sendText(sockfd, name);
@@ -411,7 +411,8 @@ int main(int argc, char const *argv[])
         }
         struct node n;
         n.new_socket = new_socket;
-        n.ip = inet_ntoa(skaddr.sin_addr);
+        // n.ip = inet_ntoa(skaddr.sin_addr);
+        strcpy(n.ip, inet_ntoa(skaddr.sin_addr));
         n.port = port;
         // printf("message-from-client: %s, %d \n", inet_ntoa(skaddr.sin_addr), port);
         // if (pthread_create(&recv_thread, NULL, thread_recv, &n) < 0)
