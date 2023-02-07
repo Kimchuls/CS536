@@ -235,7 +235,7 @@ void *thread_recv(void *arg)
         {
             continue;
         }
-        printf("REQUEST\n%s\n", request);
+        printf("REQUEST\n%s\n%ld\n", request,length);
         int request_front = 0;
         int method_front = 0;
         while (request_front < length && !isspace(request[request_front]))

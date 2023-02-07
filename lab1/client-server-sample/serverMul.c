@@ -38,19 +38,18 @@ void *thread_recv(void *arg)
 	while (1)
 	{
 		int valread = recv(new_socket, sentence, sizeof(sentence), 0);
-		if (valread < 0)
+		if (valread <= 0)
 		{
-			printf("1-close-client: %s, %d\n", n.ip, port);
+			printf("close-client: %s, %d\n", n.ip, port);
 			return NULL;
 		}
 		else if (valread > 0)
 		{
 			printf("%s\n", sentence);
 		}
-		if (send(new_socket, sentence, strlen(sentence), 0) < 0)
+		if (send(new_socket, sentence, strlen(sentence), 0) <= 0)
 		{
-			printf("2-close-client: %s, %d\n", n.ip, port);
-			// printf("%d\n", new_socket);
+			printf("close-client: %s, %d\n", n.ip, port);
 			return NULL;
 		}
 	}
