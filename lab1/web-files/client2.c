@@ -203,7 +203,7 @@ void *recv_pthread(void *arg)
 	long total_length = 0;
 	while (1)
 	{
-		memset(modifiedSentence,0,sizeof(modifiedSentence));
+		memset(modifiedSentence, 0, sizeof(modifiedSentence));
 		ssize_t result = recv(sock, modifiedSentence, sizeof(modifiedSentence), 0);
 		// printf("'%s,\n", modifiedSentence);
 		if (result < -1)
@@ -292,9 +292,44 @@ void check()
 
 int main(int argc, char *argv[])
 {
-	char *ip_str = argv[1];
-	int port = atoi(argv[2]);
-	char *message = argv[3];
+	char *url = argv[1];
+	int length = strlen(url);
+	int index = 0;
+	while (index < length && url[index] != '/')
+		index++;
+	if (index == length)
+	{
+		printf("\n URL error \n");
+		exit(EXIT_FAILURE);
+	}
+	index += 2;
+	char ip_str[20] = {0};
+	int ip_index = 0;
+	while (index < length && url[index] != ':')
+	{
+		ip_str[ip_index++] = url[index++];
+	}
+	ip_str[ip_index] = '\0';
+	index++;
+	int port = 0;
+	while (index < length && url[index] != '/')
+	{
+		port = port * 10 + (int)(url[index++]-'0');
+	}
+	index++;
+	char message[1024] = {0};
+	int message_index = 0;
+	while (index < length)
+	{
+		message[message_index++] = url[index++];
+	}
+	message[message_index] = '\0';
+	// printf("%s,%d,%s\n",ip_str,port,message);
+	// exit(0);
+
+	// char *ip_str = argv[1];
+	// int port = atoi(argv[2]);
+	// char *message = argv[3];
 
 	int opt = 1;
 	int sock = 0, valread, client_fd;

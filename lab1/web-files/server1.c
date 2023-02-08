@@ -65,18 +65,18 @@ void sendText(int sockfd, char *name)
         NotFound404(sockfd);
         return;
     }
-    char path[100]={0};  
-    strcat(path,"./www/");
-    strcat(path,name);
+    char path[100] = {0};
+    strcat(path, "./www/");
+    strcat(path, name);
     strcat(path, ".html");
     FILE *f = fopen(path, "r");
-    
+
     char header[] =
         "HTTP/1.1 200 OK\r\n"
         "Content-Type: text/html\r\n"
         "\r\n";
     send(sockfd, header, sizeof(header), 0);
-    
+
     sleep(0.005);
     char line[LINE_LENGTH] = {0};
     while (fgets(line, sizeof(line), f) != NULL)
@@ -267,7 +267,7 @@ void *thread_recv(void *arg)
         firstline[firstline_front] = '\0';
         printf("%s\n", firstline);
 
-                /*check GET request HTTP 505 HTTP Version Not Supported*/
+        /*check GET request HTTP 505 HTTP Version Not Supported*/
         if (strcmp(http_version, "HTTP/1.1") != 0)
         {
             printf("message-to-client: %s, %d \n", n.ip, port);
@@ -360,7 +360,7 @@ void *thread_recv(void *arg)
         // printf("\n\n");
     }
 
-// end:
+    // end:
     //     close(sockfd);
 }
 int main(int argc, char const *argv[])

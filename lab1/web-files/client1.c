@@ -39,7 +39,7 @@ void *send_pthread(void *arg)
 	int port = n.port;
 	char sendBuf[1024] = {0};
 	char recvBuf[2048] = {0};
-	sprintf(sendBuf, "GET /%s HTTP/1.1\r\nHost:%s:%d\r\n\r\n", message, ip, port);
+	sprintf(sendBuf, "GET /%s HTTP/2.0\r\nHost:%s:%d\r\n\r\n", message, ip, port);
 	printf("%s\n", sendBuf);
 
 	int index_msg = 0;
@@ -141,28 +141,71 @@ void *send_pthread2(void *arg)
 {
 	struct node n = *(struct node *)arg;
 	int sock = n.sockfd;
-	// char *message = n.message;
+	char *message = n.message;
 	char *ip = n.ip;
 	int port = n.port;
 	char sendBuf[2048] = {0};
 	char recvBuf[2048] = {0};
-	for (int i = 0; i < src_cnt; i++)
+	sprintf(sendBuf, "GET /%s HTTP/2.0\r\nHost:%s:%d\r\n\r\n", message, ip, port);
+	printf("message: %s.\n", sendBuf);
+	if (send(sock, sendBuf, strlen(sendBuf), 0) < 0)
 	{
-		sprintf(sendBuf, "GET /%s HTTP/1.1\r\nHost:%s:%d\r\n\r\n", getsrc[i], ip, port);
-		printf("%s\n", sendBuf);
-		if (send(sock, sendBuf, strlen(sendBuf), 0) < 0)
+		printf("send error\n");
+	}
+}
+int number[100] = {0};
+void output_func(char *sentence)
+{
+	// for(int i=0;i<src_cnt;i++)printf("%d %s\n",i,getsrc[i]);
+	// return ;
+	if (strlen(sentence) < 9)
+		return;
+	int length = strlen(sentence);
+	int index;
+	for (index = 0; index < length;)
+	{
+		// printf("%d\n",index);
+		char modif[20];
+		int flag = 0;
+		for (int i = 0; i < src_cnt; i++)
 		{
-			printf("send error\n");
+			memset(modif, 0, sizeof(modif));
+			substring(index, index + strlen(getsrc[i]), sentence, modif);
+			if (0 == strcmp(modif, getsrc[i]))
+			{
+				number[i]++;
+				if (number[i] % 100 == 1)
+				{
+					printf("Object-Frame: %s Frame_%d\n", getsrc[i], number[i]);
+				}
+				index += strlen(getsrc[i]);
+				flag = 1;
+				break;
+			}
+		}
+		if (flag == 0)
+		{
+			printf("error code!\n");
+			break;
 		}
 	}
+}
+void *recv_pthread(void *arg)
+{
+	struct node n = *(struct node *)arg;
+	int sock = n.sockfd;
+	// char *message = n.message;
+	char *ip = n.ip;
+	int port = n.port;
+
 	char modifiedSentence[1024 * 40] = {0};
 	int number = 1;
 	long total_length = 0;
 	while (1)
 	{
-
+		memset(modifiedSentence, 0, sizeof(modifiedSentence));
 		ssize_t result = recv(sock, modifiedSentence, sizeof(modifiedSentence), 0);
-		// printf("%s\n",modifiedSentence);
+		// printf("'%s,\n", modifiedSentence);
 		if (result < -1)
 		{
 			printf("0-recv error\n");
@@ -172,14 +215,15 @@ void *send_pthread2(void *arg)
 		{
 			break;
 		}
-		total_length += result;
-		if (number % 100 == 1)
-		{
-			printf("Object-Frame: %s Frame_%d\n", "message", number);
-		}
-		number++;
+		output_func(modifiedSentence);
+		// total_length += result;
+		// if (number % 100 == 1)
+		// {
+		// 	printf("Object-Frame: %s Frame_%d\n", "message", number);
+		// }
+		// number++;
 	}
-	printf("total_length:%ld\n", total_length);
+	// printf("total_length:%ld\n", total_length);
 
 	printf("end\n");
 }
@@ -248,9 +292,44 @@ void check()
 
 int main(int argc, char *argv[])
 {
-	char *ip_str = argv[1];
-	int port = atoi(argv[2]);
-	char *message = argv[3];
+	char *url = argv[1];
+	int length = strlen(url);
+	int index = 0;
+	while (index < length && url[index] != '/')
+		index++;
+	if (index == length)
+	{
+		printf("\n URL error \n");
+		exit(EXIT_FAILURE);
+	}
+	index += 2;
+	char ip_str[20] = {0};
+	int ip_index = 0;
+	while (index < length && url[index] != ':')
+	{
+		ip_str[ip_index++] = url[index++];
+	}
+	ip_str[ip_index] = '\0';
+	index++;
+	int port = 0;
+	while (index < length && url[index] != '/')
+	{
+		port = port * 10 + (int)(url[index++]-'0');
+	}
+	index++;
+	char message[1024] = {0};
+	int message_index = 0;
+	while (index < length)
+	{
+		message[message_index++] = url[index++];
+	}
+	message[message_index] = '\0';
+	// printf("%s,%d,%s\n",ip_str,port,message);
+	// exit(0);
+
+	// char *ip_str = argv[1];
+	// int port = atoi(argv[2]);
+	// char *message = argv[3];
 
 	int opt = 1;
 	int sock = 0, valread, client_fd;
@@ -316,14 +395,30 @@ int main(int argc, char *argv[])
 	}
 	// closing the connected socket
 	check();
+	strcat(getsrc[src_cnt++], "end");
+	for (int i = 0; i < src_cnt; i++)
+	{
+		pthread_t thed1;
+		struct node nn1;
+		nn1.sockfd = sock;
+		nn1.message = getsrc[i];
+		nn1.ip = ip_str;
+		nn1.port = port;
+		if (pthread_create(&thed1, NULL, send_pthread2, &nn1) != 0)
+		{
+			printf("thread error:%s \n", strerror(errno));
+			exit(EXIT_FAILURE);
+		}
+		pthread_join(thed1, NULL);
+	}
 
-	pthread_t thed1;
-	if (pthread_create(&thed1, NULL, send_pthread2, &nn) != 0)
+	pthread_t thed2;
+	if (pthread_create(&thed2, NULL, recv_pthread, &nn) != 0)
 	{
 		printf("thread error:%s \n", strerror(errno));
 		exit(EXIT_FAILURE);
 	}
-	pthread_join(thed1, NULL);
+	pthread_join(thed2, NULL);
 
 	// sleep(5);
 	// close(client_fd);
