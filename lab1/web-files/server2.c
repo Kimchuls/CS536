@@ -92,7 +92,7 @@ void sendText(int sockfd, char *name)
     // send(sockfd, end, sizeof(end), 0);
     printf("HTTP/1.1 200 OK\n");
     // sleep(5);
-    // fclose(f);
+    fclose(f);
 }
 void substring(int left, int right, char *string_o, char *output) // get substring [left, right)
 {
@@ -210,6 +210,11 @@ void *thread_recv(void *arg)
                 ii++;
                 if (flag == 0)
                     break;
+            }
+            for (int xx = 0; xx < loadfile_length; xx++)
+            {
+                fclose(fs[xx]);
+                // fs[xx] = fopen(loadfile_name[xx], "rb");
             }
             break;
         }

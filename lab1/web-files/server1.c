@@ -87,7 +87,7 @@ void sendText(int sockfd, char *name)
     printf("HTTP/1.1 200 OK\n");
     // exit(0);
     // sleep(5);
-    // fclose(f);
+    fclose(f);
 }
 void sendPicture(int sockfd, char *name)
 {
