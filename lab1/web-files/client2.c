@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <time.h>
 char gethtml[100][1024] = {0};
 char getsrc[100][1024] = {0};
 int html_lines;
@@ -425,7 +426,13 @@ int main(int argc, char *argv[])
 
 	// sleep(5);
 	close(client_fd);
-	finish=clock();
-	printf("time=%f\n", (double)(finish - start) / CLOCKS_PER_SEC);
+	// finish=clock();
+	// printf("time=%f\n", (double)(finish - start) / CLOCKS_PER_SEC);
+	
+	struct timespec now;
+
+	clock_gettime(CLOCK_MONOTONIC, &now);
+
+	printf("Seconds = %ld \t Nanoseconds = %ld\n",  now.tv_sec, now.tv_nsec);
 	return 0;
 }
