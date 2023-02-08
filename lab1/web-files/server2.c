@@ -114,14 +114,14 @@ void *thread_recv(void *arg)
     char method[METHOD_LENGTH] = {0};
     char uri[URI_LENGTH] = {0};
     char http_version[URI_LENGTH] = {0};
-    char request[REQUEST_LENGTH] = {0};
+    char requests[REQUEST_LENGTH] = {0};
     memset(loadfile, 0, sizeof(loadfile));
     loadfile_length = 0;
     memset(loadfile_flag, 0, sizeof(loadfile_flag));
 
     while (1)
     {
-        ssize_t length = recv(sockfd, request, sizeof(request), 0);
+        ssize_t length = recv(sockfd, requests, sizeof(requests), 0);
         if (length < 0)
         {
             printf("close-client: %s, %d\n", n.ip, port);
@@ -140,215 +140,248 @@ void *thread_recv(void *arg)
         }
 
         // printf("REQUEST\n%s\n%ld\n", request,length);
-        int request_front = 0;
-        int method_front = 0;
-        while (request_front < length && !isspace(request[request_front]))
-            method[method_front++] = request[request_front++];
-        method[method_front] = '\0';
-        while (request_front < length && isspace(request[request_front]))
-            request_front++;
-
-        int uri_front = 0;
-        while (request_front < length && !isspace(request[request_front]))
-            uri[uri_front++] = request[request_front++];
-        uri[uri_front] = '\0';
-        while (request_front < length && isspace(request[request_front]))
-            request_front++;
-
-        int http_front = -1;
-        while (request_front < length && !(request[request_front] == '\n' || request[request_front] == 0x0d))
-            memcpy(&http_version[++http_front], &request[request_front++], 1);
-        http_version[++http_front] = '\0';
-
-        // printf("URI: %s\n", uri);
-        if (0 == strcmp("/end", uri))
+        int index = 0, rs_cnt = 0;
+        char rs[100][100];
+        while (index < length)
         {
-            char loadfile_name[100][100];
-            for (int i = 0; i < loadfile_length; i++)
-            {
-                printf("%s\n", loadfile[i]);
-
-                sprintf(loadfile_name[i], "./www/%s", loadfile[i]);
-            }
-            FILE *fs[100];
-            ll lengths[100];
-
-            for (int xx = 0; xx < loadfile_length; xx++)
-            {
-                fs[xx] = fopen(loadfile_name[xx], "rb");
-                if (fs[xx] == NULL)
-                    return NULL;
-                fseek(fs[xx], 0, SEEK_END);
-                lengths[xx] = ftell(fs[xx]);
-                fseek(fs[xx], 0, SEEK_SET);
-                if (lengths[xx] <= 0)
-                {
-                    fclose(fs[xx]);
-                    return NULL;
+            int is = 0;
+            while (index < length && requests[index] != '\n')
+                rs[rs_cnt][is++] = requests[index++];
+            rs[rs_cnt][is++] = requests[index++];
+            // printf("line %d\n%s",rs_cnt,rs[rs_cnt]);
+            while (index < length && requests[index] != '\n')
+                rs[rs_cnt][is++] = requests[index++];
+            rs[rs_cnt][is++] = requests[index++];
+            // printf("line %d\n%s",rs_cnt,rs[rs_cnt]);
+            while(1){
+                if(index < length&& requests[index] != '\r'){
+                    while (index < length && requests[index++] != '\n');
+                }
+                else{
+                    index+=2;
+                    break;
                 }
             }
-            int X = 40 * 1024;
-            int indexes[100] = {0};
-            int ii = 1;
-            while (1)
+            // printf("line %d\n%s",rs_cnt,rs[rs_cnt]);
+            rs_cnt++;
+        }
+        for(int ii=0;ii<rs_cnt;ii++){
+            printf("line %d\n%s",ii,rs[ii]);
+        }
+        // exit(0);
+        char request[100];
+        for (int ii=0;ii<rs_cnt;ii++)
+        {
+            strcpy(request,rs[ii]);
+            int request_front = 0;
+            int method_front = 0;
+            while (request_front < length && !isspace(request[request_front]))
+                method[method_front++] = request[request_front++];
+            method[method_front] = '\0';
+            while (request_front < length && isspace(request[request_front]))
+                request_front++;
+
+            int uri_front = 0;
+            while (request_front < length && !isspace(request[request_front]))
+                uri[uri_front++] = request[request_front++];
+            uri[uri_front] = '\0';
+            while (request_front < length && isspace(request[request_front]))
+                request_front++;
+
+            int http_front = -1;
+            while (request_front < length && !(request[request_front] == '\n' || request[request_front] == 0x0d))
+                memcpy(&http_version[++http_front], &request[request_front++], 1);
+            http_version[++http_front] = '\0';
+
+            // printf("URI: %s\n", uri);
+            if (0 == strcmp("/end", uri))
             {
-                int flag = 0;
+                char loadfile_name[100][100];
+                for (int i = 0; i < loadfile_length; i++)
+                {
+                    printf("%s\n", loadfile[i]);
+
+                    sprintf(loadfile_name[i], "./www/%s", loadfile[i]);
+                }
+                FILE *fs[100];
+                ll lengths[100];
+
                 for (int xx = 0; xx < loadfile_length; xx++)
                 {
-                    char picBuff[40 * 1024] = {0};
-                    int size = MIN(X, lengths[xx] - indexes[xx]);
-                    if (size == 0)
-                        continue;
-                    fread(picBuff, 1, size, fs[xx]);
-                    send(sockfd, loadfile[xx], strlen(loadfile[xx]), 0);
-                    // send(sockfd, "\n", strlen("\n"), 0);
-                    flag = 1;
-                    indexes[xx] += size;
-                    if (ii % 100 == 1)
-                        printf("%s %d\n", loadfile[xx], ii);
+                    fs[xx] = fopen(loadfile_name[xx], "rb");
+                    if (fs[xx] == NULL)
+                        return NULL;
+                    fseek(fs[xx], 0, SEEK_END);
+                    lengths[xx] = ftell(fs[xx]);
+                    fseek(fs[xx], 0, SEEK_SET);
+                    if (lengths[xx] <= 0)
+                    {
+                        fclose(fs[xx]);
+                        return NULL;
+                    }
                 }
-                ii++;
-                if (flag == 0)
-                    break;
+                int X = 40 * 1024;
+                int indexes[100] = {0};
+                int ii = 1;
+                while (1)
+                {
+                    int flag = 0;
+                    for (int xx = 0; xx < loadfile_length; xx++)
+                    {
+                        char picBuff[40 * 1024] = {0};
+                        int size = MIN(X, lengths[xx] - indexes[xx]);
+                        if (size == 0)
+                            continue;
+                        fread(picBuff, 1, size, fs[xx]);
+                        send(sockfd, loadfile[xx], strlen(loadfile[xx]), 0);
+                        // send(sockfd, "\n", strlen("\n"), 0);
+                        flag = 1;
+                        indexes[xx] += size;
+                        if (ii % 100 == 1)
+                            printf("%s %d\n", loadfile[xx], ii);
+                    }
+                    ii++;
+                    if (flag == 0)
+                        break;
+                }
+                for (int xx = 0; xx < loadfile_length; xx++)
+                {
+                    fclose(fs[xx]);
+                    // fs[xx] = fopen(loadfile_name[xx], "rb");
+                }
+                break;
             }
-            for (int xx = 0; xx < loadfile_length; xx++)
-            {
-                fclose(fs[xx]);
-                // fs[xx] = fopen(loadfile_name[xx], "rb");
-            }
-            break;
-        }
 
-        /*check GET request HTTP 505 HTTP Version Not Supported*/
-        if (strcmp(http_version, "HTTP/2.0") != 0)
-        {
-            printf("0-message-to-client: %s, %d \n", n.ip, port);
-            HTTPVersion505(sockfd);
-            // goto end;
-            return NULL;
-        }
-
-        request_front = 0;
-        char firstline[REQUEST_LENGTH] = {0};
-        int firstline_front = 0;
-        while (request[request_front] != '\n')
-            firstline[firstline_front++] = request[request_front++];
-        firstline[firstline_front] = '\0';
-
-        /*check GET request URI 400 Bad Request*/
-        char name[REQUEST_LENGTH] = {0};
-        char *name_front = name;
-        int uri_pt = 0;
-        int file_type;
-        if (strlen(uri) == 0 || uri[uri_pt] != '/')
-        {
-            printf("1-message-to-client: %s, %d \n", n.ip, port);
-            badRequest400(sockfd);
-            return NULL;
-            // goto end;
-        }
-        else
-        {
-            uri_pt++;
-            if (strlen(uri) > 5 && uri[uri_pt] == 'w' && uri[uri_pt + 1] == 'w' &&
-                uri[uri_pt + 2] == 'w' && uri[uri_pt + 3] == '/')
+            /*check GET request HTTP 505 HTTP Version Not Supported*/
+            if (strcmp(http_version, "HTTP/2.0") != 0)
             {
-                uri_pt += 4;
+                printf("0-message-to-client: %s, %d \n", n.ip, port);
+                HTTPVersion505(sockfd);
+                // goto end;
+                return NULL;
             }
-            while (uri_pt < strlen(uri) && uri[uri_pt] != '.')
+
+            request_front = 0;
+            char firstline[REQUEST_LENGTH] = {0};
+            int firstline_front = 0;
+            while (request[request_front] != '\n')
+                firstline[firstline_front++] = request[request_front++];
+            firstline[firstline_front] = '\0';
+
+            /*check GET request URI 400 Bad Request*/
+            char name[REQUEST_LENGTH] = {0};
+            char *name_front = name;
+            int uri_pt = 0;
+            int file_type;
+            if (strlen(uri) == 0 || uri[uri_pt] != '/')
             {
-                *name_front++ = uri[uri_pt++];
-            }
-            *name_front = '\0';
-            if (uri_pt == strlen(uri))
-            {
-                printf("2-message-to-client: %s, %d \n", n.ip, port);
+                printf("1-message-to-client: %s, %d \n", n.ip, port);
                 badRequest400(sockfd);
                 return NULL;
                 // goto end;
-            }
-            uri_pt++;
-            if (strlen(uri) == 3 + uri_pt && uri[uri_pt] == 'm' && uri[uri_pt + 1] == 'p' &&
-                uri[uri_pt + 2] == '4')
-            {
-                file_type = 2;
-            }
-            else if (strlen(uri) == 4 + uri_pt && uri[uri_pt] == 'h' && uri[uri_pt + 1] == 't' &&
-                     uri[uri_pt + 2] == 'm' && uri[uri_pt + 3] == 'l')
-            {
-                file_type = 0;
-            }
-            else if (strlen(uri) == 4 + uri_pt && uri[uri_pt] == 'j' && uri[uri_pt + 1] == 'p' &&
-                     uri[uri_pt + 2] == 'e' && uri[uri_pt + 3] == 'g')
-            {
-                file_type = 1;
             }
             else
             {
-                printf("3-message-to-client: %s, %d \n", n.ip, port);
-                badRequest400(sockfd);
-                return NULL;
-                // goto end;
-            }
-        }
-        /*check GET request HTML file 200 OK/ 404 Not Found*/
-        // printf("name=%s, file_type=%d\n", name, file_type);
-        printf("4-message-to-client: %s, %d \n", n.ip, port);
-        if (file_type == 0)
-        {
-            sendText(sockfd, name);
-        }
-        else if (file_type == 1 && 0 == strcmp("purdue", name))
-        {
-            printf("SEND PURDUE\n");
-            // sendPicture(sockfd, name);
-            for (int xx = 0; xx < 100; xx++)
-            {
-                if (loadfile_flag[xx] == 0)
+                uri_pt++;
+                if (strlen(uri) > 5 && uri[uri_pt] == 'w' && uri[uri_pt + 1] == 'w' &&
+                    uri[uri_pt + 2] == 'w' && uri[uri_pt + 3] == '/')
                 {
-                    strcpy((loadfile[xx]), "purdue.jpeg");
-                    loadfile_length++;
-                    loadfile_flag[xx] = 1;
-                    break;
+                    uri_pt += 4;
+                }
+                while (uri_pt < strlen(uri) && uri[uri_pt] != '.')
+                {
+                    *name_front++ = uri[uri_pt++];
+                }
+                *name_front = '\0';
+                if (uri_pt == strlen(uri))
+                {
+                    printf("2-message-to-client: %s, %d \n", n.ip, port);
+                    badRequest400(sockfd);
+                    return NULL;
+                    // goto end;
+                }
+                uri_pt++;
+                if (strlen(uri) == 3 + uri_pt && uri[uri_pt] == 'm' && uri[uri_pt + 1] == 'p' &&
+                    uri[uri_pt + 2] == '4')
+                {
+                    file_type = 2;
+                }
+                else if (strlen(uri) == 4 + uri_pt && uri[uri_pt] == 'h' && uri[uri_pt + 1] == 't' &&
+                         uri[uri_pt + 2] == 'm' && uri[uri_pt + 3] == 'l')
+                {
+                    file_type = 0;
+                }
+                else if (strlen(uri) == 4 + uri_pt && uri[uri_pt] == 'j' && uri[uri_pt + 1] == 'p' &&
+                         uri[uri_pt + 2] == 'e' && uri[uri_pt + 3] == 'g')
+                {
+                    file_type = 1;
+                }
+                else
+                {
+                    printf("3-message-to-client: %s, %d \n", n.ip, port);
+                    badRequest400(sockfd);
+                    return NULL;
+                    // goto end;
                 }
             }
-        }
-        else if (file_type == 1 && 0 == strcmp(name, "bigpicture"))
-        {
-            printf("SEND BIGPICTURE\n");
-            // sendBigPicture(sockfd, name);
-            for (int xx = 0; xx < 100; xx++)
+            /*check GET request HTML file 200 OK/ 404 Not Found*/
+            // printf("name=%s, file_type=%d\n", name, file_type);
+            printf("4-message-to-client: %s, %d \n", n.ip, port);
+            if (file_type == 0)
             {
-                if (loadfile_flag[xx] == 0)
+                sendText(sockfd, name);
+            }
+            else if (file_type == 1 && 0 == strcmp("purdue", name))
+            {
+                printf("SEND PURDUE\n");
+                // sendPicture(sockfd, name);
+                for (int xx = 0; xx < 100; xx++)
                 {
-                    strcpy((loadfile[xx]), "bigpicture.jpeg");
-                    loadfile_length++;
-                    loadfile_flag[xx] = 1;
-                    break;
+                    if (loadfile_flag[xx] == 0)
+                    {
+                        strcpy((loadfile[xx]), "purdue.jpeg");
+                        loadfile_length++;
+                        loadfile_flag[xx] = 1;
+                        break;
+                    }
                 }
             }
-        }
-        else if (file_type == 2 && 0 == strcmp(name, "video"))
-        {
-            printf("SEND VIDEO\n");
-            // sendVideo(sockfd, name);
-            for (int xx = 0; xx < 100; xx++)
+            else if (file_type == 1 && 0 == strcmp(name, "bigpicture"))
             {
-                if (loadfile_flag[xx] == 0)
+                printf("SEND BIGPICTURE\n");
+                // sendBigPicture(sockfd, name);
+                for (int xx = 0; xx < 100; xx++)
                 {
-                    strcpy(loadfile[xx], "video.mp4");
-                    loadfile_length++;
-                    loadfile_flag[xx] = 1;
-                    break;
+                    if (loadfile_flag[xx] == 0)
+                    {
+                        strcpy((loadfile[xx]), "bigpicture.jpeg");
+                        loadfile_length++;
+                        loadfile_flag[xx] = 1;
+                        break;
+                    }
                 }
             }
-        }
-        else
-        {
-            NotFound404(sockfd);
+            else if (file_type == 2 && 0 == strcmp(name, "video"))
+            {
+                printf("SEND VIDEO\n");
+                // sendVideo(sockfd, name);
+                for (int xx = 0; xx < 100; xx++)
+                {
+                    if (loadfile_flag[xx] == 0)
+                    {
+                        strcpy(loadfile[xx], "video.mp4");
+                        loadfile_length++;
+                        loadfile_flag[xx] = 1;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                NotFound404(sockfd);
+            }
         }
     }
-
     // end:
 }
 int main(int argc, char const *argv[])
