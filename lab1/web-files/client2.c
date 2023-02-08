@@ -319,8 +319,8 @@ void check()
 #include<time.h>
 int main(int argc, char *argv[])
 {
-	clock_t start, finish;
-	start=clock();
+	struct timespec start;
+	clock_gettime(CLOCK_MONOTONIC, &start);
 	char *url = argv[1];
 	int length = strlen(url);
 	int index = 0;
@@ -456,10 +456,8 @@ int main(int argc, char *argv[])
 	// finish=clock();
 	// printf("time=%f\n", (double)(finish - start) / CLOCKS_PER_SEC);
 	
-	struct timespec now;
-
-	clock_gettime(CLOCK_MONOTONIC, &now);
-
-	printf("Seconds = %ld \t Nanoseconds = %ld\n",  now.tv_sec, now.tv_nsec);
+	struct timespec end;
+	clock_gettime(CLOCK_MONOTONIC, &end);
+	printf("Seconds = %ld \t Nanoseconds = %ld\n",  end.tv_sec-start.tv_sec, end.tv_nsec-start.tv_nsec);
 	return 0;
 }
