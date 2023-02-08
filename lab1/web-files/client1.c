@@ -40,7 +40,7 @@ void *send_pthread(void *arg)
 	char sendBuf[1024] = {0};
 	char recvBuf[2048] = {0};
 	sprintf(sendBuf, "GET /%s HTTP/1.1\r\nHost:%s:%d\r\n\r\n", message, ip, port);
-	printf("%s\n", sendBuf);
+	// printf("%s\n", sendBuf);
 
 	int index_msg = 0;
 	while (message[index_msg] != '.')
@@ -56,31 +56,31 @@ void *send_pthread(void *arg)
 	if (0 != strcmp("html", file_type))
 	{
 
-		char modifiedSentence[1024 * 40] = {0};
-		int number = 1;
-		long total_length = 0;
-		while (1)
-		{
+		// char modifiedSentence[1024 * 40] = {0};
+		// int number = 1;
+		// long total_length = 0;
+		// while (1)
+		// {
 
-			ssize_t result = recv(sock, modifiedSentence, sizeof(modifiedSentence), 0);
+		// 	ssize_t result = recv(sock, modifiedSentence, sizeof(modifiedSentence), 0);
 
-			if (result < -1)
-			{
-				printf("0-recv error\n");
-				break;
-			}
-			else if (result == -1)
-			{
-				break;
-			}
-			total_length += result;
-			if (number % 100 == 1)
-			{
-				printf("Object-Frame: %s Frame_%d\n", message, number);
-			}
-			number++;
-		}
-		printf("total_length:%ld\n", total_length);
+		// 	if (result < -1)
+		// 	{
+		// 		printf("0-recv error\n");
+		// 		break;
+		// 	}
+		// 	else if (result == -1)
+		// 	{
+		// 		break;
+		// 	}
+		// 	total_length += result;
+		// 	if (number % 100 == 1)
+		// 	{
+		// 		printf("Object-Frame: %s Frame_%d\n", message, number);
+		// 	}
+		// 	number++;
+		// }
+		// printf("total_length:%ld\n", total_length);
 	}
 	else
 	{
@@ -93,7 +93,7 @@ void *send_pthread(void *arg)
 		{
 			// printf("1:\n");
 			ssize_t result = recv(sock, modifiedSentence, sizeof(modifiedSentence), 0);
-			printf("length: %ld\n", result);
+			// printf("length: %ld\n", result);
 			if (result < -1)
 			{
 				printf("recv error\n");
@@ -101,13 +101,13 @@ void *send_pthread(void *arg)
 			}
 			else if (result == -1)
 			{
-				printf("recv disconnect\n");
+				// printf("recv disconnect\n");
 				break;
 			}
-			if (number % 100 == 1)
-			{
-				printf("Object-Frame: %s Frame_%d\n", message, number);
-			}
+			// if (number % 100 == 1)
+			// {
+				// printf("Object-Frame: %s Frame_%d\n", message, number);
+			// }
 			sprintf(output + index, "%s", modifiedSentence);
 			index += strlen(modifiedSentence);
 
@@ -129,13 +129,13 @@ void *send_pthread(void *arg)
 			}
 			memcpy(gethtml[html_lines] + j, output + i, 1);
 		}
-		for (int i = 0; i < html_lines; i++)
-		{
-			printf("%s\n", gethtml[i]);
-		}
+		// for (int i = 0; i < html_lines; i++)
+		// {
+		// 	printf("%s\n", gethtml[i]);
+		// }
 	}
 
-	printf("end\n");
+	// printf("end\n");
 }
 void *send_pthread2(void *arg)
 {
@@ -149,13 +149,12 @@ void *send_pthread2(void *arg)
 	for (int i = 0; i < src_cnt; i++)
 	{
 		sprintf(sendBuf, "GET /%s HTTP/1.1\r\nHost:%s:%d\r\n\r\n", getsrc[i], ip, port);
-		printf("%s\n", sendBuf);
+		// printf("%s\n", sendBuf);
 		if (send(sock, sendBuf, strlen(sendBuf), 0) < 0)
 		{
 			printf("send error\n");
 		}
-	}
-	char modifiedSentence[1024 * 40] = {0};
+		char modifiedSentence[1024 * 40] = {0};
 	int number = 1;
 	long total_length = 0;
 	while (1)
@@ -163,9 +162,12 @@ void *send_pthread2(void *arg)
 
 		ssize_t result = recv(sock, modifiedSentence, sizeof(modifiedSentence), 0);
 		// printf("%s\n",modifiedSentence);
+		// char substrings[128];
+		// substring(0,17,modifiedSentence,substrings);
+		// if()
 		if (result < -1)
 		{
-			printf("0-recv error\n");
+			printf("recv error\n");
 			break;
 		}
 		else if (result == -1)
@@ -175,13 +177,15 @@ void *send_pthread2(void *arg)
 		total_length += result;
 		if (number % 100 == 1)
 		{
-			printf("Object-Frame: %s Frame_%d\n", "message", number);
+			printf("Object-Frame: %s Frame_%d\n",  getsrc[i], number);
 		}
 		number++;
 	}
-	printf("total_length:%ld\n", total_length);
+	// printf("total_length:%ld\n", total_length);
 
-	printf("end\n");
+	// printf("end\n");
+	}
+	
 }
 void check()
 {
@@ -237,7 +241,8 @@ void check()
 			while (gethtml[index][label_index + length] != '"')
 				length++;
 			substring(label_index, label_index + length, gethtml[index], getsrc[src_cnt]);
-			printf("%s\n", getsrc[src_cnt++]);
+			// printf("%s\n", getsrc[src_cnt++]);
+			src_cnt++;
 		}
 		else
 		{
@@ -335,7 +340,7 @@ int main(int argc, char *argv[])
 
 	while (!(0 == strcmp(gethtml[2], "<!DOCTYPE html>") || 0 == strcmp(gethtml[2], "<html>") || 0 == strcmp(gethtml[2], "<body>"))) // check to confirm getting the whole responce string, or restart
 	{
-		printf("1\n");
+		// printf("1\n");
 		if (pthread_create(&thed, NULL, send_pthread, &nn) != 0)
 		{
 			printf("thread error:%s \n", strerror(errno));

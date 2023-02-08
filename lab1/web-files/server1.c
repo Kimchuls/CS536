@@ -147,7 +147,7 @@ void sendBigPicture(int sockfd, char *name)
                                  "Accept-Ranges:bytes\r\n"
                                  "\r\n");
     send(sockfd, ret_buff, tlen, 0);
-
+    printf("HTTP/1.1 200 OK\n");
     int i = 0;
     int X = 40 * 1024;
     char picBuff[40 * 1024] = {0};
@@ -190,7 +190,7 @@ void sendVideo(int sockfd, char *name)
                                  "Accept-Ranges:bytes\r\n"
                                  "\r\n");
     send(sockfd, ret_buff, tlen, 0);
-
+    printf("HTTP/1.1 200 OK\n");
     // memcpy(ret_buff + tlen, picBuff, length);
     // tlen += length;
     // send(sockfd, ret_buff, tlen, 0);
