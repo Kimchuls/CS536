@@ -65,7 +65,6 @@ void sendText(int sockfd, char *name)
         NotFound404(sockfd);
         return;
     }
-    // sleep(2);
     name = strcat(name, ".html");
     FILE *f = fopen(name, "r");
     char header[] =
@@ -73,24 +72,19 @@ void sendText(int sockfd, char *name)
         "Content-Type: text/html\r\n"
         "\r\n";
     send(sockfd, header, sizeof(header), 0);
-    // printf("HTTP/1.1 200 OK\n");
     sleep(0.005);
     char line[LINE_LENGTH] = {0};
     while (fgets(line, sizeof(line), f) != NULL)
     {
         send(sockfd, line, strlen(line), 0);
-        // printf("%s\n",line);
         memset(line, 0, sizeof(line));
     }
-    // char end[] = "\r\n";
-    // send(sockfd, end, sizeof(end), 0);
     printf("HTTP/1.1 200 OK\n");
     // sleep(5);
     // fclose(f);
 }
 void sendPicture(int sockfd, char *name)
 {
-    // name = sprintf("./",name,".jpeg");
     FILE *f = fopen("./purdue.jpeg", "rb");
     if (f == NULL)
         return;
@@ -235,7 +229,7 @@ void *thread_recv(void *arg)
         {
             continue;
         }
-        printf("REQUEST\n%s\n%ld\n", request,length);
+        // printf("REQUEST\n%s\n%ld\n", request,length);
         int request_front = 0;
         int method_front = 0;
         while (request_front < length && !isspace(request[request_front]))
@@ -257,14 +251,7 @@ void *thread_recv(void *arg)
         while (request_front < length && !(request[request_front] == '\n' || request[request_front] == 0x0d))
             memcpy(&http_version[++http_front], &request[request_front++], 1);
         http_version[++http_front] = '\0';
-
-        /*check GET request HTTP 505 HTTP Version Not Supported*/
-        if (strcmp(http_version, "HTTP/1.1") != 0)
-        {
-            printf("0-message-to-client: %s, %d \n", n.ip, port);
-            HTTPVersion505(sockfd);
-            goto end;
-        }
+        // printf("http_version %s\n", http_version);
 
         request_front = 0;
         char firstline[REQUEST_LENGTH] = {0};
@@ -272,7 +259,16 @@ void *thread_recv(void *arg)
         while (request[request_front] != '\n')
             firstline[firstline_front++] = request[request_front++];
         firstline[firstline_front] = '\0';
-        // printf("%s\n", firstline);
+        printf("%s\n", firstline);
+
+        /*check GET request HTTP 505 HTTP Version Not Supported*/
+        if (strcmp(http_version, "HTTP/1.1") != 0)
+        {
+            printf("message-to-client: %s, %d \n", n.ip, port);
+            HTTPVersion505(sockfd);
+            // goto end;
+            return NULL;
+        }
 
         /*check GET request URI 400 Bad Request*/
         char name[REQUEST_LENGTH] = {0};
@@ -281,10 +277,10 @@ void *thread_recv(void *arg)
         int file_type;
         if (strlen(uri) == 0 || uri[uri_pt] != '/')
         {
-            printf("1-message-to-client: %s, %d \n", n.ip, port);
+            printf("message-to-client: %s, %d \n", n.ip, port);
             badRequest400(sockfd);
-            // return NULL;
-            goto end;
+            return NULL;
+            // goto end;
         }
         else
         {
@@ -301,10 +297,10 @@ void *thread_recv(void *arg)
             *name_front = '\0';
             if (uri_pt == strlen(uri))
             {
-                printf("2-message-to-client: %s, %d \n", n.ip, port);
+                printf("message-to-client: %s, %d \n", n.ip, port);
                 badRequest400(sockfd);
-                // return NULL;
-                goto end;
+                return NULL;
+                // goto end;
             }
             uri_pt++;
             if (strlen(uri) == 3 + uri_pt && uri[uri_pt] == 'm' && uri[uri_pt + 1] == 'p' &&
@@ -324,15 +320,15 @@ void *thread_recv(void *arg)
             }
             else
             {
-                printf("3-message-to-client: %s, %d \n", n.ip, port);
+                printf("message-to-client: %s, %d \n", n.ip, port);
                 badRequest400(sockfd);
-                // return NULL;
-                goto end;
+                return NULL;
+                // goto end;
             }
         }
         /*check GET request HTML file 200 OK/ 404 Not Found*/
         // printf("name=%s, file_type=%d\n", name, (file_type == 0));
-        printf("4-message-to-client: %s, %d \n", n.ip, port);
+        printf("message-to-client: %s, %d \n", n.ip, port);
         if (file_type == 0)
         {
             sendText(sockfd, name);
@@ -355,10 +351,10 @@ void *thread_recv(void *arg)
             NotFound404(sockfd);
         }
         // printf("END ONE PART\n");
-        printf("\n\n");
+        // printf("\n\n");
     }
 
-end:
+    // end:
     //     close(sockfd);
 }
 int main(int argc, char const *argv[])
