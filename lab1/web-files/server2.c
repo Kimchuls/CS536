@@ -255,7 +255,7 @@ void *thread_recv(void *arg)
             /*check GET request HTTP 505 HTTP Version Not Supported*/
             if (strcmp(http_version, "HTTP/2.0") != 0)
             {
-                printf("0-message-to-client: %s, %d \n", n.ip, port);
+                printf("message-to-client: %s, %d \n", n.ip, port);
                 HTTPVersion505(sockfd);
                 // goto end;
                 return NULL;
@@ -275,7 +275,7 @@ void *thread_recv(void *arg)
             int file_type;
             if (strlen(uri) == 0 || uri[uri_pt] != '/')
             {
-                printf("1-message-to-client: %s, %d \n", n.ip, port);
+                printf("message-to-client: %s, %d \n", n.ip, port);
                 badRequest400(sockfd);
                 return NULL;
                 // goto end;
@@ -295,7 +295,7 @@ void *thread_recv(void *arg)
                 *name_front = '\0';
                 if (uri_pt == strlen(uri))
                 {
-                    printf("2-message-to-client: %s, %d \n", n.ip, port);
+                    printf("message-to-client: %s, %d \n", n.ip, port);
                     badRequest400(sockfd);
                     return NULL;
                     // goto end;
@@ -318,7 +318,7 @@ void *thread_recv(void *arg)
                 }
                 else
                 {
-                    printf("3-message-to-client: %s, %d \n", n.ip, port);
+                    printf("message-to-client: %s, %d \n", n.ip, port);
                     badRequest400(sockfd);
                     return NULL;
                     // goto end;
@@ -326,7 +326,7 @@ void *thread_recv(void *arg)
             }
             /*check GET request HTML file 200 OK/ 404 Not Found*/
             // printf("name=%s, file_type=%d\n", name, file_type);
-            printf("4-message-to-client: %s, %d \n", n.ip, port);
+            printf("message-to-client: %s, %d \n", n.ip, port);
             if (file_type == 0)
             {
                 sendText(sockfd, name);
