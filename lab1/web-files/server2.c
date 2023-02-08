@@ -130,15 +130,16 @@ void *thread_recv(void *arg)
         else if (length == 0)
         {
 
-            printf("1-close-client: %s, %d\n", n.ip, port);
+            printf("close-client: %s, %d\n", n.ip, port);
             break;
         }
         if (send(sockfd, "a", 1, 0) < 0)
         {
-            printf("2-close-client: %s, %d\n", n.ip, port);
+            printf("close-client: %s, %d\n", n.ip, port);
             return NULL;
         }
 
+        // printf("REQUEST\n%s\n%ld\n", request,length);
         int request_front = 0;
         int method_front = 0;
         while (request_front < length && !isspace(request[request_front]))
@@ -159,7 +160,7 @@ void *thread_recv(void *arg)
             memcpy(&http_version[++http_front], &request[request_front++], 1);
         http_version[++http_front] = '\0';
 
-        printf("URI: %s\n", uri);
+        // printf("URI: %s\n", uri);
         if (0 == strcmp("/end", uri))
         {
             char loadfile_name[100][100];
