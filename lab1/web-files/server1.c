@@ -65,13 +65,18 @@ void sendText(int sockfd, char *name)
         NotFound404(sockfd);
         return;
     }
-    name = strcat(name, ".html");
-    FILE *f = fopen(name, "r");
+    char path[100]={0};  
+    strcat(path,"./www/");
+    strcat(path,name);
+    strcat(path, ".html");
+    FILE *f = fopen(path, "r");
+    
     char header[] =
         "HTTP/1.1 200 OK\r\n"
         "Content-Type: text/html\r\n"
         "\r\n";
     send(sockfd, header, sizeof(header), 0);
+    
     sleep(0.005);
     char line[LINE_LENGTH] = {0};
     while (fgets(line, sizeof(line), f) != NULL)
@@ -80,12 +85,13 @@ void sendText(int sockfd, char *name)
         memset(line, 0, sizeof(line));
     }
     printf("HTTP/1.1 200 OK\n");
+    // exit(0);
     // sleep(5);
     // fclose(f);
 }
 void sendPicture(int sockfd, char *name)
 {
-    FILE *f = fopen("./purdue.jpeg", "rb");
+    FILE *f = fopen("./www/purdue.jpeg", "rb");
     if (f == NULL)
         return;
     fseek(f, 0, SEEK_END);
@@ -117,7 +123,7 @@ void sendPicture(int sockfd, char *name)
 }
 void sendBigPicture(int sockfd, char *name)
 {
-    FILE *f = fopen("./bigpicture.jpeg", "rb");
+    FILE *f = fopen("./www/bigpicture.jpeg", "rb");
     if (f == NULL)
         return;
     fseek(f, 0, SEEK_END);
@@ -146,7 +152,7 @@ void sendBigPicture(int sockfd, char *name)
     int X = 40 * 1024;
     char picBuff[40 * 1024] = {0};
 
-    printf("frame count:%d", (int)length / X);
+    // printf("frame count:%d", (int)length / X);
     for (i = 0; i < length; i += X)
     {
         int size = MIN(X, length - i);
@@ -158,7 +164,7 @@ void sendBigPicture(int sockfd, char *name)
 
 void sendVideo(int sockfd, char *name)
 {
-    FILE *f = fopen("./video.mp4", "rb");
+    FILE *f = fopen("./www/video.mp4", "rb");
     if (f == NULL)
         return;
     fseek(f, 0, SEEK_END);
@@ -194,7 +200,7 @@ void sendVideo(int sockfd, char *name)
     int i = 0;
     int X = 40 * 1024;
     char picBuff[40 * 1024] = {0};
-    printf("frame count:%d", (int)(length / X));
+    // printf("frame count:%d", (int)(length / X));
     for (i = 0; i < length; i += X)
     {
         int size = MIN(X, length - i);
@@ -261,7 +267,7 @@ void *thread_recv(void *arg)
         firstline[firstline_front] = '\0';
         printf("%s\n", firstline);
 
-        /*check GET request HTTP 505 HTTP Version Not Supported*/
+                /*check GET request HTTP 505 HTTP Version Not Supported*/
         if (strcmp(http_version, "HTTP/1.1") != 0)
         {
             printf("message-to-client: %s, %d \n", n.ip, port);
@@ -327,7 +333,7 @@ void *thread_recv(void *arg)
             }
         }
         /*check GET request HTML file 200 OK/ 404 Not Found*/
-        // printf("name=%s, file_type=%d\n", name, (file_type == 0));
+        // printf("name=%s, file_type=%d\n", name, file_type);
         printf("message-to-client: %s, %d \n", n.ip, port);
         if (file_type == 0)
         {
@@ -354,7 +360,7 @@ void *thread_recv(void *arg)
         // printf("\n\n");
     }
 
-    // end:
+// end:
     //     close(sockfd);
 }
 int main(int argc, char const *argv[])
