@@ -156,7 +156,7 @@ void *send_pthread2(void *arg)
 			printf("send error\n");
 		}
 		char modifiedSentence[1024 * 40] = {0};
-		int number = 1;
+		int number = 0;
 		long total_length = 0;
 		while (1)
 		{
@@ -175,15 +175,30 @@ void *send_pthread2(void *arg)
 			{
 				break;
 			}
-			total_length += result;
-			if (number % 100 == 1)
-			{
+			
+			// printf("%ld ",result);
+			if(total_length+result>=40*1024){
+				number++;
+				// printf("%ld ",total_length);
+				total_length=0;
+				if (number % 100 == 1)
+				{
+				// printf("\n");
 				printf("Object-Frame: %s Frame_%d\n", getsrc[i], number);
+				}
 			}
-			number++;
+			total_length += result;
+			
 		}
 		// printf("total_length:%ld\n", total_length);
-
+		number++;
+				// printf("%ld ",total_length);
+				total_length=0;
+				if (number % 100 == 1)
+				{
+				// printf("\n");
+				printf("Object-Frame: %s Frame_%d\n", getsrc[i], number);
+				}
 		// printf("end\n");
 	}
 }
