@@ -161,8 +161,9 @@ void output_func(char *sentence)
 	// return ;
 	if (strlen(sentence) < 9)
 		return;
+	// sprintf(sentence, "%s%s",sub,sentence);
 	int length = strlen(sentence);
-	int index;
+	int index=0;
 	for (index = 0; index < length;)
 	{
 		// printf("%d\n",index);
@@ -171,6 +172,7 @@ void output_func(char *sentence)
 		for (int i = 0; i < src_cnt; i++)
 		{
 			memset(modif, 0, sizeof(modif));
+			if(index+strlen(getsrc[i])>length)continue;
 			substring(index, index + strlen(getsrc[i]), sentence, modif);
 			if (0 == strcmp(modif, getsrc[i]))
 			{
@@ -178,6 +180,7 @@ void output_func(char *sentence)
 				if (number[i] % 100 == 1)
 				{
 					printf("Object-Frame: %s Frame_%d\n", getsrc[i], number[i]);
+					
 				}
 				index += strlen(getsrc[i]);
 				flag = 1;
@@ -186,8 +189,23 @@ void output_func(char *sentence)
 		}
 		if (flag == 0)
 		{
-			printf("error code!\n");
-			break;
+			while(index<length){
+				char modif[20];
+				int flag2 = 0;
+				for (int i = 0; i < src_cnt; i++)
+				{
+					memset(modif, 0, sizeof(modif));
+					if(index+strlen(getsrc[i])>=length)continue;
+					substring(index, index + strlen(getsrc[i]), sentence, modif);
+					if (0 == strcmp(modif, getsrc[i]))
+					{
+						flag2=1;
+						break;
+					}
+				}
+				if(flag2==1)break;
+				index++;
+			}	
 		}
 	}
 }
@@ -200,7 +218,8 @@ void *recv_pthread(void *arg)
 	int port = n.port;
 
 	char modifiedSentence[1024 * 40] = {0};
-	int number = 1;
+	memset(number,0,sizeof(number));
+	// int number = 0;
 	long total_length = 0;
 	while (1)
 	{
@@ -223,6 +242,12 @@ void *recv_pthread(void *arg)
 		// 	printf("Object-Frame: %s Frame_%d\n", "message", number);
 		// }
 		// number++;
+	}
+	for(int i=0;i<src_cnt;i++){
+		if (number[i] % 100 >90)
+		{
+			printf("Object-Frame: %s Frame_%d\n", getsrc[i], 1+100*(1+(int)number[i]/100));
+		}
 	}
 	// printf("total_length:%ld\n", total_length);
 
@@ -414,6 +439,8 @@ int main(int argc, char *argv[])
 			exit(EXIT_FAILURE);
 		}
 		pthread_join(thed1, NULL);
+		
+	sleep(0.05);
 	}
 
 	pthread_t thed2;
