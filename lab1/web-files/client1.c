@@ -106,7 +106,7 @@ void *send_pthread(void *arg)
 			}
 			// if (number % 100 == 1)
 			// {
-				// printf("Object-Frame: %s Frame_%d\n", message, number);
+			// printf("Object-Frame: %s Frame_%d\n", message, number);
 			// }
 			sprintf(output + index, "%s", modifiedSentence);
 			index += strlen(modifiedSentence);
@@ -155,37 +155,36 @@ void *send_pthread2(void *arg)
 			printf("send error\n");
 		}
 		char modifiedSentence[1024 * 40] = {0};
-	int number = 1;
-	long total_length = 0;
-	while (1)
-	{
+		int number = 1;
+		long total_length = 0;
+		while (1)
+		{
 
-		ssize_t result = recv(sock, modifiedSentence, sizeof(modifiedSentence), 0);
-		// printf("%s\n",modifiedSentence);
-		// char substrings[128];
-		// substring(0,17,modifiedSentence,substrings);
-		// if()
-		if (result < -1)
-		{
-			printf("recv error\n");
-			break;
+			ssize_t result = recv(sock, modifiedSentence, sizeof(modifiedSentence), 0);
+			// printf("%s\n",modifiedSentence);
+			// char substrings[128];
+			// substring(0,17,modifiedSentence,substrings);
+			// if()
+			if (result < -1)
+			{
+				printf("recv error\n");
+				break;
+			}
+			else if (result == -1)
+			{
+				break;
+			}
+			total_length += result;
+			if (number % 100 == 1)
+			{
+				printf("Object-Frame: %s Frame_%d\n", getsrc[i], number);
+			}
+			number++;
 		}
-		else if (result == -1)
-		{
-			break;
-		}
-		total_length += result;
-		if (number % 100 == 1)
-		{
-			printf("Object-Frame: %s Frame_%d\n",  getsrc[i], number);
-		}
-		number++;
-	}
-	// printf("total_length:%ld\n", total_length);
+		// printf("total_length:%ld\n", total_length);
 
-	// printf("end\n");
+		// printf("end\n");
 	}
-	
 }
 void check()
 {
@@ -253,6 +252,8 @@ void check()
 
 int main(int argc, char *argv[])
 {
+	clock_t start, finish;
+	start = clock();
 	char *url = argv[1];
 	int length = strlen(url);
 	int index = 0;
@@ -275,7 +276,7 @@ int main(int argc, char *argv[])
 	int port = 0;
 	while (index < length && url[index] != '/')
 	{
-		port = port * 10 + (int)(url[index++]-'0');
+		port = port * 10 + (int)(url[index++] - '0');
 	}
 	index++;
 	char message[1024] = {0};
@@ -360,6 +361,8 @@ int main(int argc, char *argv[])
 	pthread_join(thed1, NULL);
 
 	// sleep(5);
-	// close(client_fd);
+	close(client_fd);
+	finish = clock();
+	printf("time=%f\n", (double)(finish - start) / CLOCKS_PER_SEC);
 	return 0;
 }
