@@ -5,47 +5,107 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#define PORT 12000
+#include <pthread.h>
+#include <errno.h>
+#include <stdlib.h>
+char *message;
 
-int main(int argc, char const* argv[])
+void *send_pthread(void *arg)
 {
+	int sock = *(int *)arg;
+	if (send(sock, message, strlen(message), 0) < 0)
+	{
+		printf("send error\n");
+	}
+	// printf("Modified sentence received from server:\n");
+	// char modifiedSentence[1024] = {0};
+	// if (recv(sock, modifiedSentence, sizeof(modifiedSentence), 0) < 0)
+	// {
+	// 	printf("recv error\n");
+	// 	return NULL;
+	// }
+	// printf("%s\n", modifiedSentence);
+}
+void *recv_pthread(void *arg)
+{
+	int sock = *(int *)arg;
+	// if (send(sock, message, strlen(message), 0) < 0)
+	// {
+	// 	printf("send error\n");
+	// }
+	printf("Modified sentence received from server:\n");
+	char modifiedSentence[1024] = {0};
+	if (recv(sock, modifiedSentence, sizeof(modifiedSentence), 0) < 0)
+	{
+		printf("recv error\n");
+		return NULL;
+	}
+	printf("%s\n", modifiedSentence);
+}
+
+int main(int argc, char *argv[])
+{
+	char *ip_str = argv[1];
+	int port = atoi(argv[2]);
+	message = argv[3];
+
 	int sock = 0, valread, client_fd;
 	struct sockaddr_in serv_addr;
-	printf("Input lowercase sentence:\n");
-	char sentence[256];
-	fgets(sentence, sizeof(sentence), stdin);
-	char modifiedSentence[1024] = { 0 };
-	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+	{
 		printf("\n Socket creation error \n");
 		return -1;
 	}
-
 	serv_addr.sin_family = AF_INET;
-	serv_addr.sin_port = htons(PORT);
-
+	serv_addr.sin_port = htons(port);
+	serv_addr.sin_addr.s_addr = inet_addr(ip_str);
 	// Convert IPv4 and IPv6 addresses from text to binary
 	// form
-	if (inet_pton(AF_INET, "10.145.21.35", &serv_addr.sin_addr)
-		<= 0) {
+	if (inet_pton(AF_INET, ip_str, &serv_addr.sin_addr) <= 0)
+	{
 		printf(
 			"\nInvalid address/ Address not supported \n");
 		return -1;
 	}
-	// serv_addr.sin_addr.s_addr = inet_addr("10.145.21.35");
 
-	if ((client_fd
-		= connect(sock, (struct sockaddr*)&serv_addr,
-				sizeof(serv_addr)))
-		< 0) {
+	if ((client_fd = connect(sock, (struct sockaddr *)&serv_addr,
+							 sizeof(serv_addr))) < 0)
+	{
 		printf("\nConnection Failed \n");
 		return -1;
 	}
-	send(sock, sentence, strlen(sentence), 0);
-	printf("Modified sentence received from server:\n");
-	valread = read(sock, modifiedSentence, 1024);
-	printf("%s\n", modifiedSentence);
-
+	pthread_t thed1;
+	if (pthread_create(&thed1, NULL, send_pthread, &sock) != 0)
+	{
+		printf("thread error:%s \n", strerror(errno));
+		return -1;
+	}
+	pthread_join(thed1, NULL);
+	pthread_t thed2;
+	if (pthread_create(&thed2, NULL, recv_pthread, &sock) != 0)
+	{
+		printf("thread error:%s \n", strerror(errno));
+		return -1;
+	}
+	pthread_join(thed2, NULL);
+	// pthread_t thed2;
+	// if (pthread_create(&thed2, NULL, send_pthread, &sock) != 0)
+	// {
+	// 	printf("thread error:%s \n", strerror(errno));
+	// 	return -1;
+	// }
+	// pthread_join(thed2, NULL);
+	// sleep(3);
+	// message[0]='*';
+	// pthread_t thed3;
+	// if (pthread_create(&thed3, NULL, send_pthread, &sock) != 0)
+	// {
+	// 	printf("thread error:%s \n", strerror(errno));
+	// 	return -1;
+	// }
+	// pthread_join(thed2, NULL);
 	// closing the connected socket
-	close(client_fd);
+	sleep(5);
+	// close(client_fd);
 	return 0;
 }
