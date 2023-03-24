@@ -47,19 +47,7 @@ void read_ints(FILE *file, int nums[])
 
 void print_kout(int k, int k0)
 {
-  printf("k=%d:\n", k0);
-  int i, j;
-  for (i = 0; i < num_nodes; i++)
-  {
-    printf("node-%d: ", i);
-    for (j = 0; j < num_nodes; j++)
-    {
-      printf("%d", dv[k % 2][i][j]);
-      if (j != num_nodes - 1)
-        printf(" ");
-    }
-    printf("\n");
-  }
+
 }
 void main(int argc, char *argv[])
 {
@@ -83,10 +71,7 @@ void main(int argc, char *argv[])
       dv[k % 2][i][j] = numbers[l];
       broadcast[k % 2][i] = 1;
     }
-  print_kout(k, k);
   int p, flag = 1;
-  if (K < 10)
-    K = 10;
   for (k = 1; k <= K; k++)
   {
     if (flag)//if some nodes broadcast the dv
@@ -113,19 +98,8 @@ void main(int argc, char *argv[])
           }
       }
     }
-    if (k < 5 || k % 10 == 0)
-      print_kout(k, k);
     flag = 0;//detect whether converging
     for (i = 0; i < num_nodes; i++)
       flag += broadcast[k % 2][i];
-    if (flag == 0) // converge k=9->k=10 to detect; converge k=10->k=11 to detect
-    {
-      if (k >= 10)//finishing condition
-      {
-        if (k % 10 > 1)
-          print_kout(k, 10 * (1 + (int)k / 10));
-        break;
-      }
-    }
   }
 }
