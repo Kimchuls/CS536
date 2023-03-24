@@ -1,0 +1,3 @@
+clear
+gcc mainA.c -o mainA -lm
+./mainA 50 ./topo_4.txt
