@@ -75,6 +75,7 @@ void main(int argc, char *argv[])
   int numbers[110] = {0};
   int i, j, k = 0, l;
   read_ints(file, numbers);
+  fclose(file);
   num_nodes = sqrt(1.0 * numbers[0]);
   for (i = 0, l = 1; i < num_nodes; i++)
     for (j = 0; j < num_nodes; j++, l++)

@@ -1,0 +1,3 @@
+clear
+gcc mainB.c -o mainB -lm
+./mainB 5 ./topo_6.txt ./traffic_6.txt
