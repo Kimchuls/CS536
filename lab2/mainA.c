@@ -97,10 +97,10 @@ void main(int argc, char *argv[])
         for (j = 0; j < num_nodes; j++)
           dv[k % 2][i][j] = (i != j ? -1 : 0);
         for (j = 0; j < num_nodes; j++)
-          if (broadcast[j] == 0 || i == j || link_costs[i][j] == -1)
+          if (i == j || link_costs[i][j] == -1)
             continue;
           else
-            for (l = 0; l < num_nodes; l++)
+            for (l = 0; l < num_nodes; l++)// dv(i,l)=max_in_dv{d(i,j)+dv(j,l)}
               if (i == l || dv[(k - 1) % 2][j][l] == -1)
                 continue;
               else
